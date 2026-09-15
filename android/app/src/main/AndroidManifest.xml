@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.nfcguard.app">
+
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
+    <uses-feature android:name="android.hardware.nfc.hce" android:required="true" />
+
+    <application
+        android:name=".NfcGuardApp"
+        android:allowBackup="false"
+        android:label="NFC Guard"
+        android:theme="@style/Theme.AppCompat.Light">
+
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".OnboardingActivity" android:exported="false" />
+
+        <!--
+          중요: 이 서비스는 실결제 AID를 소유하지 않는다 (다른 결제앱과 충돌 방지).
+          실제 배포 시에는 NFC 필드 폴링 이벤트만 관찰하는 구조로 설계 검토 필요.
+          (Android는 기본적으로 동시에 여러 서비스가 같은 AID를 선점하지 못하게 막음)
+        -->
+        <service
+            android:name=".NfcGuardHceService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NFC_SERVICE">
+            <intent-filter>
+                <action android:name="android.nfc.cardemulation.action.HOST_APDU_SERVICE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.cardemulation.host_apdu_service"
+                android:resource="@xml/apduservice" />
+        </service>
+
+    </application>
+</manifest>
