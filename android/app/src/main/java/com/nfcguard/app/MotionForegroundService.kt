@@ -50,6 +50,12 @@ class MotionForegroundService : Service() {
     override fun onDestroy() {
         wakeLock?.release()
         wakeLock = null
+        // 사용자가 보호를 끈 경우 센서 수집도 중단 (배터리)
+        if (!ProtectionSettings.isEnabled(this)) {
+            val app = application as NfcGuardApp
+            app.motionBuffer.stop()
+            app.deviceContextMonitor.stop()
+        }
         super.onDestroy()
     }
 
@@ -59,13 +65,14 @@ class MotionForegroundService : Service() {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (nm.getNotificationChannel(CHANNEL_ID) == null) {
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "NFC 보호 실행 중", NotificationManager.IMPORTANCE_MIN)
+                NotificationChannel(CHANNEL_ID, getString(R.string.notif_channel_monitor), NotificationManager.IMPORTANCE_MIN)
             )
         }
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_lock_lock)
-            .setContentTitle("NFC Guard 보호 중")
-            .setContentText("의도하지 않은 NFC 태그를 감시하고 있습니다.")
+            .setSmallIcon(R.drawable.ic_stat_shield)
+            .setContentTitle(getString(R.string.notif_monitor_title))
+            .setContentText(getString(R.string.notif_monitor_text))
+            .setContentIntent(NotificationHelper.openAppIntent(this))
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_MIN)
             .build()
@@ -77,6 +84,10 @@ class MotionForegroundService : Service() {
 
         fun start(context: Context) {
             ContextCompat.startForegroundService(context, Intent(context, MotionForegroundService::class.java))
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, MotionForegroundService::class.java))
         }
     }
 }

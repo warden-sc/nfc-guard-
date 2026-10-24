@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import java.util.concurrent.atomic.AtomicInteger
 
 object NotificationHelper {
@@ -29,7 +30,7 @@ object NotificationHelper {
         if (!nm.areNotificationsEnabled()) return // POST_NOTIFICATIONS 미허용 시 진동(HapticAlert)만 전달됨
         if (nm.getNotificationChannel(CHANNEL_ID) == null) {
             nm.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "NFC 이상감지", NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationChannel(CHANNEL_ID, context.getString(R.string.notif_channel_alerts), NotificationManager.IMPORTANCE_HIGH).apply {
                     // 진동은 HapticAlert가 전용 패턴으로 직접 울리므로 채널 진동은 끔 (이중 진동 방지)
                     enableVibration(false)
                 }
@@ -44,7 +45,9 @@ object NotificationHelper {
                 "최근 1분 내 ${repeatCount}회, 의도적 동작이 불확실한 NFC 응답이 발생했습니다. 카드사 거래내역을 확인하세요."
         }
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setSmallIcon(R.drawable.ic_stat_shield)
+            .setColor(ContextCompat.getColor(context, R.color.nfc_danger))
+            .setContentIntent(openAppIntent(context))
             .setContentTitle("본인 확인 안 된 NFC 접촉 감지")
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
@@ -54,11 +57,18 @@ object NotificationHelper {
             .setAutoCancel(true)
 
         if (eventId != null) {
-            builder.addAction(0, "내가 태그함", labelIntent(context, notificationId, eventId, wasIntentional = true))
-            builder.addAction(0, "내가 안 함", labelIntent(context, notificationId, eventId, wasIntentional = false))
+            builder.addAction(0, context.getString(R.string.label_mine), labelIntent(context, notificationId, eventId, wasIntentional = true))
+            builder.addAction(0, context.getString(R.string.label_not_mine), labelIntent(context, notificationId, eventId, wasIntentional = false))
         }
         nm.notify(notificationId, builder.build())
     }
+
+    /** 알림을 누르면 메인 화면(감지 기록)으로 */
+    fun openAppIntent(context: Context): PendingIntent = PendingIntent.getActivity(
+        context, 0,
+        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
 
     private fun labelIntent(context: Context, notificationId: Int, eventId: Long, wasIntentional: Boolean): PendingIntent {
         val intent = Intent(context, LabelActionReceiver::class.java).apply {

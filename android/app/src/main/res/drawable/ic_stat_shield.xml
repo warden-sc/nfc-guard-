@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 상태바/알림 아이콘: 흰색 단색이어야 함 (시스템이 색을 입힘). 아이콘 영역(26~82)만 잘라 24dp에 맞춤 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <group
+        android:translateX="-18"
+        android:translateY="-19">
+        <path
+            android:pathData="M54,21 L82,31 V52 C82,71 70,82.5 54,89 C38,82.5 26,71 26,52 V31 Z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeLineJoin="round"
+            android:strokeWidth="6" />
+        <path
+            android:pathData="M48.45,50.65 A8,8 0 0 1 48.45,61.35 M54.02,45.63 A15.5,15.5 0 0 1 54.02,66.37 M59.59,40.61 A23,23 0 0 1 59.59,71.39"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeLineCap="round"
+            android:strokeWidth="5.5" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M38.6,56 A3.4,3.4 0 1 0 45.4,56 A3.4,3.4 0 1 0 38.6,56 Z" />
+    </group>
+</vector>

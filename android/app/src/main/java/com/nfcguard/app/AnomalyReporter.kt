@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.Log
 import org.json.JSONObject
+import java.util.UUID
 import java.util.concurrent.Executors
 
 /**
@@ -52,14 +53,24 @@ object AnomalyReporter {
                 HapticAlert.vibrateSuspicious(context)
             }
 
+            val elapsedSinceDetectionMs = (SystemClock.elapsedRealtimeNanos() - detectedAtNanos) / 1_000_000L
+            val occurredAtEpochMs = nowMs - elapsedSinceDetectionMs
+
+            // 메인 화면 "최근 감지 기록"에 즉시 표시 (서버 id는 업로드 후 붙임)
+            val localId = UUID.randomUUID().toString()
+            EventLogStore.add(
+                context,
+                EventLogStore.Entry(localId, occurredAtEpochMs, result.riskScore, result.reason, shouldAlert, null, null)
+            )
+
             // 3) 백엔드 전송 (원본 센서 시계열 포함 -> 파인튜닝 재료)
             //    TODO: 오프라인일 때 유실되지 않도록 로컬 재전송 큐 추가
-            val elapsedSinceDetectionMs = (SystemClock.elapsedRealtimeNanos() - detectedAtNanos) / 1_000_000L
             val payload = eventPayload(
                 AnomalyEventSource.FIELD_DETECTION, result, deviceContext, samples,
-                occurredAtEpochMs = nowMs - elapsedSinceDetectionMs, repeatCount = repeatCount
+                occurredAtEpochMs = occurredAtEpochMs, repeatCount = repeatCount
             )
             val eventId = BackendClient.postEvent(context, payload)
+            if (eventId != null) EventLogStore.attachEventId(context, localId, eventId)
 
             // 4) 업로드 성공 시 같은 알림에 "내가 태그함 / 내가 안 함" 라벨 버튼 추가
             if (shouldAlert && eventId != null) {

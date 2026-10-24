@@ -10,7 +10,7 @@
 - `android/` — 본체. 필드 감지 + 동작/주변상태 기반 판정 + 사후 알림·진동 + 온디바이스 AI 모델.
 - `server-java/` — 이벤트·라벨 수집, 학습 데이터 export, 모델 배포 (Spring Boot).
 - `ml-python/` — HAR 백본 사전학습 → NFC Guard 라벨로 파인튜닝 → 서명된 TFLite 배포.
-- `ios/NfcGuardLite/` — 축소판. 자동 탐지 불가(플랫폼 한계)로 수동 점검/셀프 리포트/교육 콘텐츠로 스코프 조정.
+- `ios/NfcGuardLite/` — 축소판 (앱 아이콘 미적용). 자동 탐지 불가(플랫폼 한계)로 수동 점검/셀프 리포트/교육 콘텐츠로 스코프 조정.
 
 ## Android 핵심 흐름
 1. `MotionForegroundService` — 가속도계/자이로/근접/조도를 상시 수집 (Android 9+ 백그라운드 센서 차단 대응, 재부팅 시 `BootReceiver`가 자동 시작)
@@ -87,8 +87,10 @@ python -m pytest tests   # TensorFlow 없이 도는 파이프라인 테스트
   (50건 미만이면 경고 출력). 합성 데이터로는 사전학습 → 파인튜닝 → TFLite → 서명 → 앱 검증까지 배관만 확인됨.
 
 ## 앱스토어/플레이스토어 제출 전 남은 작업
-- Android: Android Studio에서 프로젝트 임포트 → 레이아웃 XML 완성(`MainActivity`, `OnboardingActivity`) → 실기기 NFC 테스트
+- Android: Android Studio에서 프로젝트 임포트 → 빌드 확인 → 실기기 NFC 테스트
   (에뮬레이터는 NFC 하드웨어 시뮬레이션이 제한적이라 실기기 필수)
+- Android: 앱 아이콘(적응형/테마 아이콘/알림 아이콘)과 메인·온보딩 화면은 구현됨.
+  플레이스토어 등록용 512px 아이콘은 `android/app/src/main/ic_launcher-playstore.png`
 - Android: Foreground Service `specialUse` 타입은 Play 심사 시 사용 사유 설명 필요
 - iOS: Mac + Xcode에서 프로젝트 열어서 서명/프로비저닝 프로파일 설정 → 실기기 빌드
   (Core NFC는 시뮬레이터에서 동작 안 함, 실기기 필수)

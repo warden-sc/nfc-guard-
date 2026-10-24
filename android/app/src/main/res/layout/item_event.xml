@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 감지 기록 한 건 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/eventIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_error"
+            app:tint="@color/nfc_danger" />
+
+        <TextView
+            android:id="@+id/eventReason"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="@color/nfc_on_surface"
+            android:textStyle="bold"
+            tools:text="가방·주머니 속에서 태그됨" />
+
+        <TextView
+            android:id="@+id/eventRisk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="@color/nfc_danger"
+            tools:text="위험도 95%" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/eventTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="2dp"
+        android:textAppearance="@style/TextAppearance.NfcGuard.Body"
+        tools:text="2026.10.24 08:41" />
+
+    <!-- 라벨 미확정이면 질문 + 버튼, 확정되면 결과 문구 -->
+    <TextView
+        android:id="@+id/eventLabelState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/nfc_on_surface_variant"
+        tools:text="@string/label_question" />
+
+    <LinearLayout
+        android:id="@+id/eventLabelButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/eventMine"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/label_mine" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/eventNotMine"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            app:backgroundTint="@color/nfc_danger"
+            android:text="@string/label_not_mine"
+            android:textColor="@color/nfc_surface" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 적응형 아이콘 전경: 방패 + NFC 물결 (안전 영역 지름 66dp 안에 배치) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF2DD4BF"
+        android:pathData="M54,21 L82,31 V52 C82,71 70,82.5 54,89 C38,82.5 26,71 26,52 V31 Z" />
+    <path
+        android:pathData="M48.45,50.65 A8,8 0 0 1 48.45,61.35 M54.02,45.63 A15.5,15.5 0 0 1 54.02,66.37 M59.59,40.61 A23,23 0 0 1 59.59,71.39"
+        android:strokeColor="#FF0A1A33"
+        android:strokeLineCap="round"
+        android:strokeWidth="4.4" />
+    <path
+        android:fillColor="#FF0A1A33"
+        android:pathData="M38.6,56 A3.4,3.4 0 1 0 45.4,56 A3.4,3.4 0 1 0 38.6,56 Z" />
+</vector>

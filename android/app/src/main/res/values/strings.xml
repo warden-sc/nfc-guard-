@@ -3,4 +3,71 @@
     <string name="app_name">NFC Guard</string>
     <string name="hce_service_description">NFC Guard 의도하지 않은 태그 감지</string>
     <string name="hce_aid_group_description">NFC Guard 필드 감지 (데모)</string>
+
+    <!-- 메인: 보호 상태 -->
+    <string name="status_on_title">보호 중</string>
+    <string name="status_off_title">보호 꺼짐</string>
+    <string name="status_on_desc">가방·주머니 속에서 내가 꺼내지 않았는데 NFC가 태그되면 바로 알림과 진동으로 알려드려요.</string>
+    <string name="status_off_desc">지금은 의도하지 않은 NFC 태그를 감시하지 않아요. 스위치를 켜면 보호가 시작돼요.</string>
+    <string name="status_switch_cd">보호 켜기/끄기</string>
+
+    <string name="level_advanced">감지 수준: 고급 · 리더기 접근을 결제 전에 감지할 수 있는 기기예요</string>
+    <string name="level_basic">감지 수준: 기본 · 이 기기는 일부 상황에서만 감지할 수 있어요</string>
+    <string name="level_nfc_off">NFC가 꺼져 있어요 · 태그 자체가 일어나지 않아요</string>
+    <string name="level_no_nfc">이 기기는 NFC를 지원하지 않아요</string>
+
+    <!-- 메인: 체크리스트 -->
+    <string name="checklist_title">보호가 잘 동작하려면</string>
+    <string name="check_notifications">알림 허용</string>
+    <string name="check_notifications_desc">의심 태그를 바로 알려드리려면 필요해요</string>
+    <string name="check_nfc">NFC 켜짐</string>
+    <string name="check_nfc_desc">NFC 설정이 꺼져 있으면 감지할 대상도 없어요</string>
+    <string name="check_battery">배터리 최적화 제외</string>
+    <string name="check_battery_desc">일부 기종은 백그라운드 감시를 강제로 멈춰요</string>
+    <string name="check_onboarding">내 태그 동작 등록</string>
+    <string name="check_onboarding_desc">평소 태그하는 동작을 알려주면 오탐이 줄어요</string>
+    <string name="check_onboarding_done">%1$d회 등록됨</string>
+    <string name="action_allow">허용</string>
+    <string name="action_open_settings">설정</string>
+    <string name="action_register">등록</string>
+    <string name="action_redo">다시 등록</string>
+
+    <!-- 메인: 감지 기록 -->
+    <string name="history_title">최근 감지 기록</string>
+    <string name="history_empty">아직 의심스러운 태그가 없어요.\n감지되면 여기에 기록돼요.</string>
+    <string name="reason_bag">가방·주머니 속에서 태그됨</string>
+    <string name="reason_no_gesture">꺼내는 동작 없이 태그됨</string>
+    <string name="reason_ambiguous">의도가 불확실한 태그</string>
+    <string name="reason_normal">정상 태그</string>
+    <string name="risk_percent">위험도 %1$d%%</string>
+    <string name="label_question">내가 한 태그인가요?</string>
+    <string name="label_mine">내가 태그함</string>
+    <string name="label_not_mine">내가 안 함</string>
+    <string name="label_confirmed_mine">내가 한 태그로 확인됨</string>
+    <string name="label_confirmed_not_mine">본인이 하지 않은 태그로 신고됨</string>
+    <string name="label_pending_upload">서버 전송 대기 중</string>
+    <string name="label_send_failed">전송하지 못했어요. 네트워크를 확인해주세요.</string>
+    <string name="not_mine_dialog_title">거래내역을 확인해주세요</string>
+    <string name="not_mine_dialog_body">카드사·교통카드 앱에서 이 시각 전후의 결제 내역을 확인하고, 모르는 거래가 있으면 카드사 고객센터에 바로 신고하세요.</string>
+    <string name="action_ok">확인</string>
+
+    <string name="model_active">AI 판정 모델 적용 중 (v%1$s)</string>
+    <string name="model_inactive">AI 모델 미적용 · 기본 판정 규칙으로 감시 중</string>
+
+    <!-- 온보딩 -->
+    <string name="onboarding_title">내 태그 동작 등록</string>
+    <string name="onboarding_desc">평소 결제할 때처럼 폰을 꺼내 리더기(또는 다른 폰 뒷면)에 대고, 바로 아래 버튼을 눌러주세요. 사람마다 태그하는 동작이 달라서, 등록하면 오탐이 줄어요.</string>
+    <string name="onboarding_step1">1. 폰을 주머니나 가방에서 꺼내요</string>
+    <string name="onboarding_step2">2. 리더기에 폰 뒷면을 대요</string>
+    <string name="onboarding_step3">3. 1~2초 안에 아래 버튼을 눌러요</string>
+    <string name="onboarding_progress">%1$d / %2$d</string>
+    <string name="onboarding_button">방금 태그했어요</string>
+    <string name="onboarding_done">등록 완료! 내 태그 동작을 기억했어요.</string>
+    <string name="onboarding_close_cd">닫기</string>
+
+    <!-- 알림 -->
+    <string name="notif_channel_alerts">NFC 이상감지</string>
+    <string name="notif_channel_monitor">NFC 보호 실행 중</string>
+    <string name="notif_monitor_title">NFC Guard 보호 중</string>
+    <string name="notif_monitor_text">의도하지 않은 NFC 태그를 감시하고 있어요.</string>
 </resources>

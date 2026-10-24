@@ -59,6 +59,7 @@ class NfcGuardHceService : HostApduService() {
      * 반복 카운트(AnomalyReporter 에스컬레이션)가 부풀려진다.
      */
     private fun onFieldDetected(trigger: String) {
+        if (!ProtectionSettings.isEnabled(applicationContext)) return
         // SensorEvent.timestamp와 같은 시계(부팅 후 경과시간)를 써야 버퍼와 시점 비교가 맞음
         val fieldDetectedAtNanos = SystemClock.elapsedRealtimeNanos()
         synchronized(Companion) {
