@@ -30,6 +30,8 @@ class OnboardingActivity : Activity() {
         val result = GestureMatcher.evaluate(samples, baseline = null)
         collectedDisplacements.add(result.netDisplacement)
         collectedOrientations.add(result.orientationShift)
+        // 사용자가 직접 확인한 정상 태그 샘플 -> 서버 학습 데이터(정상 클래스)로 업로드
+        AnomalyReporter.uploadOnboardingSampleAsync(applicationContext, result, samples)
 
         if (collectedDisplacements.size >= MIN_SAMPLES) {
             finishOnboarding()

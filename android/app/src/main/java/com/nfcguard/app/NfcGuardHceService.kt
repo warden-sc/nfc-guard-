@@ -4,6 +4,7 @@ import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
+import kotlin.random.Random
 
 /**
  * 중요: 이 서비스는 실제 결제/교통카드 AID를 직접 처리하지 않는다.
@@ -51,10 +52,14 @@ class NfcGuardHceService : HostApduService() {
             if (result.riskScore > RISK_REPORT_THRESHOLD) {
                 AnomalyReporter.reportAsync(
                     applicationContext,
-                    riskScore = result.riskScore,
-                    reason = result.reason,
+                    result = result,
+                    deviceContext = deviceContext,
+                    samples = samples,
                     detectedAtNanos = fieldDetectedAtNanos
                 )
+            } else if (Random.nextDouble() < NORMAL_SAMPLE_UPLOAD_RATE) {
+                // 정상 판정 이벤트도 일부 업로드: 의심 이벤트만 모이면 학습 데이터가 한쪽으로 치우침
+                AnomalyReporter.uploadNormalSampleAsync(applicationContext, result, deviceContext, samples, fieldDetectedAtNanos)
             }
         }
 
@@ -69,6 +74,7 @@ class NfcGuardHceService : HostApduService() {
     companion object {
         private const val TAG = "NfcGuardHce"
         private const val RISK_REPORT_THRESHOLD = 0.4
+        private const val NORMAL_SAMPLE_UPLOAD_RATE = 0.05
         private val SELECT_OK_SW = byteArrayOf(0x90.toByte(), 0x00)
     }
 }

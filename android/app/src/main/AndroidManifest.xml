@@ -16,6 +16,7 @@
     <application
         android:name=".NfcGuardApp"
         android:allowBackup="false"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:label="NFC Guard"
         android:theme="@style/Theme.AppCompat.Light">
 
@@ -37,6 +38,8 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="NFC 태그 순간 직전의 기기 움직임을 상시 버퍼링하여 사용자가 의도하지 않은 NFC 태그(가방/주머니 속 스키밍)를 감지" />
         </service>
+
+        <receiver android:name=".LabelActionReceiver" android:exported="false" />
 
         <receiver android:name=".BootReceiver" android:exported="false">
             <intent-filter>

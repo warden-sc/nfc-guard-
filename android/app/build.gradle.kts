@@ -13,6 +13,12 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "0.1-scaffold"
+        // server-java 주소. 에뮬레이터에서 로컬 서버는 10.0.2.2, 실배포는 HTTPS 주소로 교체
+        buildConfigField("String", "BACKEND_URL", "\"http://10.0.2.2:8080\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {
