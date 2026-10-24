@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         // 버튼: "내 태깅 패턴 등록하기" -> OnboardingActivity
         // 리스트: 최근 이상감지 로그 (AnomalyReporter 로컬 로그 조회)
         requestNotificationPermissionIfNeeded()
+        MotionForegroundService.start(this)
     }
 
     /** Android 13+는 알림 런타임 권한이 없으면 의심 태그 알림이 표시되지 않음 */

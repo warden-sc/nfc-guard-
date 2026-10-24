@@ -30,14 +30,21 @@ class DeviceContextMonitor(context: Context) : SensorEventListener {
 
     @Volatile private var proximityNear: Boolean? = null
     @Volatile private var ambientLux: Float? = null
+    private var started = false
 
+    /** 여러 곳(Application, Foreground Service)에서 불러도 한 번만 등록 */
+    @Synchronized
     fun start() {
+        if (started) return
+        started = true
         proximity?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         light?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
     }
 
+    @Synchronized
     fun stop() {
         sensorManager.unregisterListener(this)
+        started = false
     }
 
     override fun onSensorChanged(event: SensorEvent) {

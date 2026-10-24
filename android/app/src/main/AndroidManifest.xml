@@ -6,6 +6,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
     <uses-feature android:name="android.hardware.nfc.hce" android:required="true" />
 
@@ -23,6 +27,22 @@
         </activity>
 
         <activity android:name=".OnboardingActivity" android:exported="false" />
+
+        <!-- 센서 상시 수집. Android 14+ 필수 타입 지정 (Play 심사 시 specialUse 사유 설명 필요) -->
+        <service
+            android:name=".MotionForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="NFC 태그 순간 직전의 기기 움직임을 상시 버퍼링하여 사용자가 의도하지 않은 NFC 태그(가방/주머니 속 스키밍)를 감지" />
+        </service>
+
+        <receiver android:name=".BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!--
           중요: 이 서비스는 실결제 AID를 소유하지 않는다 (다른 결제앱과 충돌 방지).

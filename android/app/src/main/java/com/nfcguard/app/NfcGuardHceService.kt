@@ -35,24 +35,27 @@ class NfcGuardHceService : HostApduService() {
         // SensorEvent.timestamp와 같은 시계(부팅 후 경과시간)를 써야 버퍼와 시점 비교가 맞음
         val fieldDetectedAtNanos = SystemClock.elapsedRealtimeNanos()
 
-        // 1) 이미 상시 수집 중인 버퍼/주변상태를 즉시 조회 (새로 측정 X -> 지연 없음)
-        val samples = motionBuffer.snapshot()
+        // 1) 주변상태(근접/조도/화면)는 지금 즉시 고정
         val deviceContext = deviceContextMonitor.snapshot()
 
-        // 2) 판정 (수 ms 내 완료, 트랜잭션 타임아웃 예산에 영향 없음)
-        val result = GestureMatcher.evaluate(samples, baseline, deviceContext)
+        // 2) 화면 꺼짐 중엔 센서값이 하드웨어 FIFO에 남아 있으므로 flush 후 판정.
+        //    판정/신고는 사후 알림용이라 응답(아래 return)을 기다리게 하지 않는다.
+        motionBuffer.flushThen {
+            val samples = motionBuffer.snapshot().filter { it.tNanos <= fieldDetectedAtNanos }
+            val result = GestureMatcher.evaluate(samples, baseline, deviceContext)
 
-        Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
+            Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
 
-        // 3) 트랜잭션은 절대 막지 않음. 위험도가 높아도 정상 응답을 그대로 통과.
-        //    대신 비동기로 서버에 신고 -> 카드사/발급 서버 측 사후 대응(세션 플래그) 트리거
-        if (result.riskScore > RISK_REPORT_THRESHOLD) {
-            AnomalyReporter.reportAsync(
-                applicationContext,
-                riskScore = result.riskScore,
-                reason = result.reason,
-                detectedAtNanos = fieldDetectedAtNanos
-            )
+            // 3) 트랜잭션은 절대 막지 않음. 위험도가 높아도 정상 응답을 그대로 통과.
+            //    대신 비동기로 서버에 신고 -> 카드사/발급 서버 측 사후 대응(세션 플래그) 트리거
+            if (result.riskScore > RISK_REPORT_THRESHOLD) {
+                AnomalyReporter.reportAsync(
+                    applicationContext,
+                    riskScore = result.riskScore,
+                    reason = result.reason,
+                    detectedAtNanos = fieldDetectedAtNanos
+                )
+            }
         }
 
         // 실제 결제 응답은 OS/Wallet이 처리하므로, 여기서는 통과용 더미 응답만 반환.
