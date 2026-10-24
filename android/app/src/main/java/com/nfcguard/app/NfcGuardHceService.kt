@@ -43,7 +43,12 @@ class NfcGuardHceService : HostApduService() {
         //    판정/신고는 사후 알림용이라 응답(아래 return)을 기다리게 하지 않는다.
         motionBuffer.flushThen {
             val samples = motionBuffer.snapshot().filter { it.tNanos <= fieldDetectedAtNanos }
-            val result = GestureMatcher.evaluate(samples, baseline, deviceContext)
+            val heuristic = GestureMatcher.evaluate(samples, baseline, deviceContext)
+            // 학습된 온디바이스 모델이 있으면 점수를 섞음 (없거나 실패하면 휴리스틱 단독)
+            val result = ModelUpdater.current?.let { model ->
+                runCatching { RiskBlender.blend(heuristic, model.predictIntentionalProb(samples), model.spec) }
+                    .getOrNull()
+            } ?: heuristic
 
             Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
 

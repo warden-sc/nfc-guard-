@@ -17,6 +17,8 @@ object BackendClient {
 
     private const val PREFS = "nfcguard_backend"
     private const val TIMEOUT_MS = 5_000
+    private const val MAX_METADATA_BYTES = 64 * 1024
+    private const val MAX_MODEL_BYTES = 20 * 1024 * 1024
 
     private data class Credentials(val deviceToken: String, val apiKey: String)
 
@@ -32,6 +34,38 @@ object BackendClient {
         val creds = credentials(context) ?: return false
         val (code, _) = request("POST", "/api/v1/events/$eventId/confirm?wasIntentional=$wasIntentional", null, creds)
         return code == 200
+    }
+
+    /** @return (메타데이터 원문 바이트, X-Model-Signature 헤더). 모델이 아직 없으면 null */
+    fun fetchModelMetadata(): Pair<ByteArray, String?>? = download("/api/v1/model/metadata", MAX_METADATA_BYTES)
+
+    fun downloadModel(): ByteArray? = download("/api/v1/model/latest", MAX_MODEL_BYTES)?.first
+
+    private fun download(path: String, maxBytes: Int): Pair<ByteArray, String?>? = try {
+        val conn = URL(BuildConfig.BACKEND_URL + path).openConnection() as HttpURLConnection
+        conn.connectTimeout = TIMEOUT_MS
+        conn.readTimeout = 30_000
+        try {
+            if (conn.responseCode != 200) null
+            else {
+                val bytes = conn.inputStream.use { input ->
+                    val buf = java.io.ByteArrayOutputStream()
+                    val chunk = ByteArray(16 * 1024)
+                    while (true) {
+                        val n = input.read(chunk)
+                        if (n < 0) break
+                        buf.write(chunk, 0, n)
+                        if (buf.size() > maxBytes) throw IllegalStateException("$path exceeds $maxBytes bytes")
+                    }
+                    buf.toByteArray()
+                }
+                bytes to conn.getHeaderField("X-Model-Signature")
+            }
+        } finally {
+            conn.disconnect()
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "GET $path failed: ${e.message}"); null
     }
 
     /** MotionBuffer 스냅샷 -> ml-python/data_loader.py 가 읽는 형식 ([{"t","ax",...,"gz"}]) */

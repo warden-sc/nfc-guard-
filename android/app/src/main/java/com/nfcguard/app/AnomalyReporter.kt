@@ -114,6 +114,7 @@ object AnomalyReporter {
         put("netDisplacement", result.netDisplacement)
         put("orientationShift", result.orientationShift)
         put("pocketScore", result.pocketScore)
+        result.modelVersion?.let { put("modelVersion", it) }
         ctx.proximityNear?.let { put("proximityNear", it) }
         ctx.ambientLux?.let { put("ambientLux", it.toDouble()) }
         put("screenInteractive", ctx.screenInteractive)

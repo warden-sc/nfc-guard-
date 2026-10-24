@@ -17,3 +17,7 @@ __pycache__/
 ml-python/models/
 ml-python/pretrained/
 ml-python/data/
+
+# 모델 서명 개인키 (절대 커밋 금지)
+ml-python/keys/
+*.pem

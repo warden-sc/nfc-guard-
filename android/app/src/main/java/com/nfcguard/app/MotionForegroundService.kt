@@ -33,6 +33,7 @@ class MotionForegroundService : Service() {
         val app = application as NfcGuardApp
         app.motionBuffer.start()
         app.deviceContextMonitor.start()
+        ModelUpdater.schedulePeriodicCheck(this)
 
         // 하드웨어 FIFO가 작은 기종은 화면 꺼짐 중 데이터가 끊기므로 CPU를 깨워둔다 (배터리 비용 있음)
         if (!app.motionBuffer.hasSufficientFifo()) {

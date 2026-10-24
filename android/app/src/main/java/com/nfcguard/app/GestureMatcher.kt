@@ -23,7 +23,8 @@ object GestureMatcher {
         val netDisplacement: Double, // m, 참고용
         val orientationShift: Double,// rad, 참고용
         val reason: String,
-        val pocketScore: Double = 0.0 // 0.0 ~ 1.0, 가방/주머니 안일 가능성
+        val pocketScore: Double = 0.0, // 0.0 ~ 1.0, 가방/주머니 안일 가능성
+        val modelVersion: Long? = null  // 온디바이스 모델 점수가 섞였으면 그 모델 버전 (RiskBlender)
     )
 
     // 사람 보행 주기 대역 (Hz)
@@ -80,14 +81,14 @@ object GestureMatcher {
         val riskScore = (1.0 - (1.0 - motionRisk) * (1.0 - pocketContribution) * (1.0 - screenOffBoost))
             .coerceIn(0.0, 1.0)
 
-        val reason = when {
-            riskScore > 0.7 && pocketScore >= 0.6 -> "tapped_while_in_bag_or_pocket"
-            riskScore > 0.7 -> "no_intentional_gesture_detected"
-            riskScore > 0.4 -> "ambiguous_low_confidence"
-            else -> "gesture_matches_expected_tap_pattern"
-        }
+        return Result(riskScore, netDisp, orientationShift, reasonFor(riskScore, pocketScore), pocketScore)
+    }
 
-        return Result(riskScore, netDisp, orientationShift, reason, pocketScore)
+    fun reasonFor(riskScore: Double, pocketScore: Double): String = when {
+        riskScore > 0.7 && pocketScore >= 0.6 -> "tapped_while_in_bag_or_pocket"
+        riskScore > 0.7 -> "no_intentional_gesture_detected"
+        riskScore > 0.4 -> "ambiguous_low_confidence"
+        else -> "gesture_matches_expected_tap_pattern"
     }
 
     /**
