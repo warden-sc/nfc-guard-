@@ -2,6 +2,7 @@ package com.nfcguard.app
 
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 
 /**
@@ -19,24 +20,29 @@ import android.util.Log
 class NfcGuardHceService : HostApduService() {
 
     private lateinit var motionBuffer: MotionBuffer
+    private lateinit var deviceContextMonitor: DeviceContextMonitor
     private var baseline: UserGestureBaseline? = null
 
     override fun onCreate() {
         super.onCreate()
-        motionBuffer = (application as NfcGuardApp).motionBuffer
+        val app = application as NfcGuardApp
+        motionBuffer = app.motionBuffer
+        deviceContextMonitor = app.deviceContextMonitor
         baseline = GestureBaselineStore.load(applicationContext)
     }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
-        val fieldDetectedAtNanos = System.nanoTime()
+        // SensorEvent.timestamp와 같은 시계(부팅 후 경과시간)를 써야 버퍼와 시점 비교가 맞음
+        val fieldDetectedAtNanos = SystemClock.elapsedRealtimeNanos()
 
-        // 1) 이미 상시 수집 중인 버퍼를 즉시 조회 (새로 측정 X -> 지연 없음)
+        // 1) 이미 상시 수집 중인 버퍼/주변상태를 즉시 조회 (새로 측정 X -> 지연 없음)
         val samples = motionBuffer.snapshot()
+        val deviceContext = deviceContextMonitor.snapshot()
 
         // 2) 판정 (수 ms 내 완료, 트랜잭션 타임아웃 예산에 영향 없음)
-        val result = GestureMatcher.evaluate(samples, baseline)
+        val result = GestureMatcher.evaluate(samples, baseline, deviceContext)
 
-        Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason}")
+        Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
 
         // 3) 트랜잭션은 절대 막지 않음. 위험도가 높아도 정상 응답을 그대로 통과.
         //    대신 비동기로 서버에 신고 -> 카드사/발급 서버 측 사후 대응(세션 플래그) 트리거
