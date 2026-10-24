@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NFC Guard</string>
+    <string name="hce_service_description">NFC Guard 의도하지 않은 태그 감지</string>
+    <string name="hce_aid_group_description">NFC Guard 필드 감지 (데모)</string>
 </resources>

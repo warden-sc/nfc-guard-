@@ -1,6 +1,8 @@
 package com.nfcguard.app
 
 import android.nfc.cardemulation.HostApduService
+import android.nfc.cardemulation.PollingFrame
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -17,6 +19,11 @@ import kotlin.random.Random
  * 실제 프로덕션에서는 이 서비스가 결제 AID와 "병렬로" 등록되어 필드 감지 브로드캐스트만
  * 수신하는 구조(또는 NfcAdapter.ReaderCallback 활용)로 가야 하며,
  * 여기서는 로직 검증용 스캐폴딩으로 processCommandApdu 후킹 지점을 그대로 보여준다.
+ *
+ * Android 15+(API 35)에서는 processPollingFrames()로 리더기 폴링(필드 ON)을 결제 응답 이전에
+ * 관찰할 수 있다 (Observe Mode / polling loop filter). 두 경로 모두 onFieldDetected()로 합류한다.
+ * 주의: 서드파티 앱이 "다른 서비스로 가는" 폴링까지 받는지는 기종/NFC 컨트롤러별로 다르므로
+ * 실기기 검증 전에는 실험 기능으로 취급할 것.
  */
 class NfcGuardHceService : HostApduService() {
 
@@ -33,8 +40,31 @@ class NfcGuardHceService : HostApduService() {
     }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
+        onFieldDetected("apdu")
+        // 실제 결제 응답은 OS/Wallet이 처리하므로, 여기서는 통과용 더미 응답만 반환.
+        return SELECT_OK_SW
+    }
+
+    /** Android 15+: 리더기 폴링 프레임 관찰. 필드 ON 프레임 = 리더기에 닿은 순간 */
+    override fun processPollingFrames(frames: List<PollingFrame>) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+        if (frames.any { it.type == PollingFrame.POLLING_LOOP_TYPE_ON }) {
+            onFieldDetected("polling_loop")
+        }
+    }
+
+    /**
+     * 필드 감지 1회당 판정 1회. 태그 한 번에 APDU가 여러 개 오고(SELECT, READ ...)
+     * 폴링 프레임도 초당 여러 번 오므로 디바운스하지 않으면 같은 태그가 여러 번 신고되어
+     * 반복 카운트(AnomalyReporter 에스컬레이션)가 부풀려진다.
+     */
+    private fun onFieldDetected(trigger: String) {
         // SensorEvent.timestamp와 같은 시계(부팅 후 경과시간)를 써야 버퍼와 시점 비교가 맞음
         val fieldDetectedAtNanos = SystemClock.elapsedRealtimeNanos()
+        synchronized(Companion) {
+            if (fieldDetectedAtNanos - lastFieldDetectedAtNanos < FIELD_DEBOUNCE_NANOS) return
+            lastFieldDetectedAtNanos = fieldDetectedAtNanos
+        }
 
         // 1) 주변상태(근접/조도/화면)는 지금 즉시 고정
         val deviceContext = deviceContextMonitor.snapshot()
@@ -50,7 +80,7 @@ class NfcGuardHceService : HostApduService() {
                     .getOrNull()
             } ?: heuristic
 
-            Log.d(TAG, "field detected, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
+            Log.d(TAG, "field detected via $trigger, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
 
             // 3) 트랜잭션은 절대 막지 않음. 위험도가 높아도 정상 응답을 그대로 통과.
             //    대신 비동기로 서버에 신고 -> 카드사/발급 서버 측 사후 대응(세션 플래그) 트리거
@@ -67,9 +97,6 @@ class NfcGuardHceService : HostApduService() {
                 AnomalyReporter.uploadNormalSampleAsync(applicationContext, result, deviceContext, samples, fieldDetectedAtNanos)
             }
         }
-
-        // 실제 결제 응답은 OS/Wallet이 처리하므로, 여기서는 통과용 더미 응답만 반환.
-        return SELECT_OK_SW
     }
 
     override fun onDeactivated(reason: Int) {
@@ -81,5 +108,9 @@ class NfcGuardHceService : HostApduService() {
         private const val RISK_REPORT_THRESHOLD = 0.4
         private const val NORMAL_SAMPLE_UPLOAD_RATE = 0.05
         private val SELECT_OK_SW = byteArrayOf(0x90.toByte(), 0x00)
+        private const val FIELD_DEBOUNCE_NANOS = 3_000_000_000L // 3초
+
+        // 서비스 인스턴스가 재생성돼도 유지되도록 companion에 둠
+        private var lastFieldDetectedAtNanos = Long.MIN_VALUE / 2
     }
 }

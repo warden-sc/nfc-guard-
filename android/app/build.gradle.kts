@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.nfcguard.app"
-    compileSdk = 34
+    compileSdk = 35 // processPollingFrames / Observe Mode (API 35) 컴파일용. targetSdk는 동작 변경 검토 후 올릴 것
 
     defaultConfig {
         applicationId = "com.nfcguard.app"
