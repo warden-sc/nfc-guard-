@@ -9,6 +9,6 @@ import java.util.List;
 public interface AnomalyEventRepository extends JpaRepository<AnomalyEvent, Long> {
     List<AnomalyEvent> findByDeviceTokenAndOccurredAtAfter(String deviceToken, Instant after);
 
-    // 파인튜닝 데이터셋 추출용: 라벨이 확정된 것만
-    List<AnomalyEvent> findByConfirmedIntentionalIsNotNull();
+    // 파인튜닝 데이터셋 추출용: 라벨이 확정된 것만, afterId 이후 증분으로
+    List<AnomalyEvent> findByConfirmedIntentionalIsNotNullAndIdGreaterThanOrderByIdAsc(Long afterId);
 }

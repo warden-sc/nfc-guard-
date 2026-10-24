@@ -1,5 +1,6 @@
 package com.nfcguard.server.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,13 +19,19 @@ import java.io.File;
 @RequestMapping("/api/v1/model")
 public class ModelDistributionController {
 
-    // Python 스크립트(ml-python/finetune.py)가 이 경로에 결과물을 씀
-    private static final String MODEL_DIR = System.getProperty("nfcguard.model.dir", "./models");
     private static final String LATEST_FILENAME = "gesture_classifier.tflite";
+
+    // Python 스크립트(ml-python/finetune.py)가 이 경로에 결과물을 씀.
+    // (이전 System.getProperty 방식은 application.properties 값을 읽지 못했음)
+    private final String modelDir;
+
+    public ModelDistributionController(@Value("${nfcguard.model.dir:./models}") String modelDir) {
+        this.modelDir = modelDir;
+    }
 
     @GetMapping("/latest")
     public ResponseEntity<Resource> downloadLatest() {
-        File file = new File(MODEL_DIR, LATEST_FILENAME);
+        File file = new File(modelDir, LATEST_FILENAME);
         if (!file.exists()) {
             return ResponseEntity.notFound().build();
         }
@@ -37,7 +44,7 @@ public class ModelDistributionController {
 
     @GetMapping("/version")
     public ResponseEntity<Long> version() {
-        File file = new File(MODEL_DIR, LATEST_FILENAME);
+        File file = new File(modelDir, LATEST_FILENAME);
         if (!file.exists()) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(file.lastModified());
     }
