@@ -1,0 +1,15 @@
+# 로컬 PostgreSQL:  docker compose up -d   ->  SPRING_PROFILES_ACTIVE=postgres mvn spring-boot:run
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: nfcguard
+      POSTGRES_USER: nfcguard
+      POSTGRES_PASSWORD: nfcguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - nfcguard-pg:/var/lib/postgresql/data
+
+volumes:
+  nfcguard-pg:

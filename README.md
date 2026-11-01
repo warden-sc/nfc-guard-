@@ -4,7 +4,8 @@
 대표 시나리오: 가방·주머니 속 기기에 몰래 리더기를 대는 스키밍.
 트랜잭션은 절대 막지 않고 **사후 알림 + 진동**으로 대응한다.
 
-설계 상세(판정 흐름, 데이터 계약, 모델 배포)는 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 참고.
+설계 상세(판정 흐름, 데이터 계약, 모델 배포)는 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
+Android Studio / IntelliJ 설정과 실기기 테스트, PostgreSQL 전환은 [`docs/SETUP.md`](docs/SETUP.md) 참고.
 
 ## 구조
 - `android/` — 본체. 필드 감지 + 동작/주변상태 기반 판정 + 사후 알림·진동 + 온디바이스 AI 모델.

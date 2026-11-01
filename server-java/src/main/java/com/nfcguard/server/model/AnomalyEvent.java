@@ -1,6 +1,8 @@
 package com.nfcguard.server.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 
 /**
@@ -39,7 +41,9 @@ public class AnomalyEvent {
 
     // 파인튜닝의 실제 원재료. MotionBuffer.snapshot()을 JSON 배열로 직렬화한 것.
     // risk_score 같은 요약값만으로는 모델을 재학습시킬 수 없음 - 원본 시계열이 필요.
-    @Lob
+    // @Lob을 쓰면 PostgreSQL에서 oid(Large Object)로 매핑되어 트랜잭션 밖 조회 시
+    // "Unable to access lob stream" 오류가 남 -> PostgreSQL text / H2 varchar 로 매핑되는 LONG32VARCHAR 사용
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
     private String rawSensorWindowJson;
 
     protected AnomalyEvent() {}
