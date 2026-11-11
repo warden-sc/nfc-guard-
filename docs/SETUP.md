@@ -1,5 +1,8 @@
 # 개발 환경 설정 가이드
 
+> 이 문서는 **현재 코드의 실행 방법**입니다. 최신 개발 브랜치는 `feature/unintended-tap-detection`이며, 이번 확정 목표는 [PROJECT_SCOPE.md](PROJECT_SCOPE.md)를 따릅니다.
+> 아래 테스트에서 감지·알림이 동작해도 NFC 동작 제한이나 위치 로그가 구현됐다는 뜻은 아닙니다.
+
 `android/`(Android Studio)와 `server-java/`(IntelliJ IDEA)는 **서로 독립된 프로젝트**다.
 저장소 루트를 통째로 열지 말고, 각 IDE에서 해당 폴더를 열 것.
 
@@ -69,8 +72,8 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
    pip install pyscard
    python tools/hce_select_test.py --repeat 5 --interval 4
    ```
-   - 폰을 손에 들고 꺼내서 대기 → 위험도 낮음
-   - 폰을 가방/파우치에 넣은 채 리더기 위 → `tapped_while_in_bag_or_pocket`, 알림 + 진동
+   - 폰을 손에 들고 꺼내서 대기 → 낮은 점수가 예상되는 규칙 가설을 확인하고 실제 결과 기록
+   - 폰을 가방/파우치에 넣은 채 리더기 위 → `tapped_while_in_bag_or_pocket`, 알림 + 진동이 나오는지 확인. 차폐 파우치는 NFC 통신 자체가 안 될 수 있으므로 별도 구분
    - 화면 끈 상태에서도 반복 (센서 FIFO flush 경로 검증)
 5. 서버 연동 확인: 아래 서버를 띄운 뒤 감지 → 알림의 "내가 태그함/내가 안 함" → 서버 export에 라벨 반영
 
@@ -184,3 +187,34 @@ server-java/src/main/java/com/nfcguard/server/
     ├── AnomalyEventRequest.java          수집 요청 DTO
     └── Device.java                       익명 기기 엔티티 (devices)
 ```
+
+---
+
+## 3. ML 학습·모델 배포
+
+아래는 실제 백본과 라벨 데이터가 준비된 경우의 실행 경로다. 코드 존재만으로 학습이나 실사용 정확도가 검증된 것은 아니다.
+
+```bash
+cd ml-python
+pip install -r requirements.txt
+
+# 최초 1회 키 생성. 개인키는 저장소에 올리지 않는다.
+python model_export.py --generate-key ./keys
+# 출력된 공개키를 android/app/build.gradle.kts의 MODEL_SIGNING_PUBLIC_KEY에 설정
+
+# 별도로 내려받은 UCI HAR 데이터로 백본 사전학습
+python pretrain_backbone_from_scratch.py --uci-root "./data/UCI HAR Dataset"
+
+# 서버와 같은 관리자 키 사용. 기본 산출물은 ../server-java/models에 저장
+NFCGUARD_ADMIN_API_KEY=<서버와 같은 값> python finetune.py --signing-key ./keys/model_signing_private.pem
+
+# 네트워크 서버 대신 이미 수집한 JSONL로 실행
+python finetune.py --dataset-file ./data/collected.jsonl --signing-key ./keys/model_signing_private.pem
+
+# TensorFlow 없이 실행되는 기존 파이프라인 테스트
+python -m pytest tests
+```
+
+위 환경변수 접두어는 Bash 문법이다. PowerShell에서는 먼저 `$env:NFCGUARD_ADMIN_API_KEY = "<서버와 같은 값>"`를 실행한 뒤 `python finetune.py ...`를 실행한다.
+
+현재 앱의 `SensorPreprocessor`와 Python 로더는 같은 입력 규격을 사용해야 한다. 보간·단위·정규화를 변경할 때 양쪽 코드와 테스트를 함께 수정한다. 참가자·세션 분리, 라벨 출처 관리 등 추가 실험안은 개발 브랜치에 반영된 범위를 확인한 뒤 사용한다.
