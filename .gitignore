@@ -1,0 +1,23 @@
+# Java / Maven
+server-java/target/
+server-java/data/
+server-java/models/
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.iml
+.idea/
+
+# Python / ML
+__pycache__/
+*.pyc
+ml-python/models/
+ml-python/pretrained/
+ml-python/data/
+
+# 모델 서명 개인키 (절대 커밋 금지)
+ml-python/keys/
+*.pem

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 브랜드: 아이콘의 남색 배경 + 민트 방패 -->
+    <color name="brand_navy">#FF0A1A33</color>
+    <color name="brand_navy_light">#FF12345E</color>
+    <color name="brand_mint">#FF2DD4BF</color>
+
+    <!-- 라이트 테마 (민트는 흰 배경 위 글자 대비가 낮아 진한 청록을 primary로 사용) -->
+    <color name="nfc_primary">#FF0E7C72</color>
+    <color name="nfc_on_primary">#FFFFFFFF</color>
+    <color name="nfc_primary_container">#FFC9F4EE</color>
+    <color name="nfc_on_primary_container">#FF00201D</color>
+    <color name="nfc_background">#FFF4F6F9</color>
+    <color name="nfc_surface">#FFFFFFFF</color>
+    <color name="nfc_on_surface">#FF141B24</color>
+    <color name="nfc_on_surface_variant">#FF566273</color>
+    <color name="nfc_outline">#FFD5DBE3</color>
+    <color name="nfc_danger">#FFC62828</color>
+    <color name="nfc_danger_container">#FFFDE7E7</color>
+    <color name="nfc_warning">#FFB26A00</color>
+    <color name="nfc_ok">#FF0E7C72</color>
+    <color name="nfc_off">#FF8A94A3</color>
+</resources>
