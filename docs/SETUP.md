@@ -13,15 +13,14 @@
 ### 요구 버전
 | 항목 | 버전 | 설정 위치 |
 |---|---|---|
-| Android Studio | Ladybug(2024.2) 이상 권장 | AGP 8.6 지원 버전 |
+| Android Studio | Meerkat Feature Drop(2024.3.2) 이상 | AGP 8.10 지원 버전 |
 | JDK | 17 이상 (Android Studio 내장 JBR 사용 권장) | Settings > Build Tools > Gradle > Gradle JDK |
-| Gradle | 8.9 (Wrapper 고정) | `android/gradle/wrapper/gradle-wrapper.properties` |
-| Android Gradle Plugin | 8.6.1 | `android/build.gradle.kts` |
+| Gradle | 8.11.1 (Wrapper 고정) | `android/gradle/wrapper/gradle-wrapper.properties` |
+| Android Gradle Plugin | 8.10.1 | `android/build.gradle.kts` |
 | Kotlin | 1.9.24 | `android/build.gradle.kts` |
-| compileSdk / targetSdk / minSdk | 35 / 34 / 26 | `android/app/build.gradle.kts` |
+| compileSdk / targetSdk / minSdk | 36 / 36 / 26 | `android/app/build.gradle.kts` |
 
-SDK Manager에서 **Android SDK Platform 35**와 **Build-Tools 35.x**를 설치한다.
-compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파일하기 위해 필요하다.
+SDK Manager에서 **Android SDK Platform 36**을 설치한다. 빌드 도구는 Gradle이 요구하는 버전을 사용한다.
 
 ### 임포트
 1. Android Studio > **Open** > `nfc-guard-/android` 폴더 선택 (저장소 루트 아님)
@@ -29,7 +28,7 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
 3. Sync 실패 시 확인할 것
    - `android.useAndroidX=true`가 `android/gradle.properties`에 있는지 (없으면 AndroidX 의존성 오류)
    - Gradle JDK가 17 이상인지
-   - SDK Platform 35가 설치되어 있는지
+   - SDK Platform 36이 설치되어 있는지
 4. 단위 테스트: `app/src/test` 우클릭 > Run Tests (`GestureMatcherTest`, `GestureModelTest` — 기기 불필요)
 
 ### 서버 주소 (`BuildConfig.BACKEND_URL`)

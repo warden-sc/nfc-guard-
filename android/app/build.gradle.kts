@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.nfcguard.app"
-    compileSdk = 35 // processPollingFrames / Observe Mode (API 35) 컴파일용. targetSdk는 동작 변경 검토 후 올릴 것
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nfcguard.app"
         minSdk = 26   // HCE + LINEAR_ACCELERATION 안정 지원 기준
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1-scaffold"
         // server-java 주소. 기본값은 에뮬레이터 -> PC 로컬 서버(10.0.2.2).

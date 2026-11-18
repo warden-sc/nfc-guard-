@@ -16,6 +16,7 @@
         <item name="android:statusBarColor">@color/nfc_background</item>
         <item name="android:navigationBarColor">@color/nfc_background</item>
         <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_system_bars</item>
     </style>
 
     <style name="Widget.NfcGuard.Card" parent="Widget.Material3.CardView.Elevated">

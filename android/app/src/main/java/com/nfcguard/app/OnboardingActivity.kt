@@ -3,6 +3,7 @@ package com.nfcguard.app
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import com.nfcguard.app.databinding.ActivityOnboardingBinding
 
 /**
@@ -18,8 +19,10 @@ class OnboardingActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         motionBuffer = (application as NfcGuardApp).motionBuffer
         motionBuffer.start() // 보호가 꺼져 있어도 등록 중에는 센서가 필요
 

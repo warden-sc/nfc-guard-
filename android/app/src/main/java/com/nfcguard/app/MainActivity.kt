@@ -19,6 +19,7 @@ import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.core.widget.ImageViewCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.nfcguard.app.databinding.ActivityMainBinding
@@ -53,8 +54,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
 
         binding.protectionSwitch.isChecked = ProtectionSettings.isEnabled(this)
         binding.protectionSwitch.setOnCheckedChangeListener { _, checked ->
