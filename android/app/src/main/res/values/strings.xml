@@ -7,12 +7,12 @@
     <!-- 메인: 보호 상태 -->
     <string name="status_on_title">보호 중</string>
     <string name="status_off_title">보호 꺼짐</string>
-    <string name="status_on_desc">가방·주머니 속에서 내가 꺼내지 않았는데 NFC가 태그되면 바로 알림과 진동으로 알려드려요.</string>
+    <string name="status_on_desc">감지한 NFC 태그를 직전 각도 변화와 이동 상태로 판정해요.</string>
     <string name="status_off_desc">지금은 의도하지 않은 NFC 태그를 감시하지 않아요. 스위치를 켜면 보호가 시작돼요.</string>
     <string name="status_switch_cd">보호 켜기/끄기</string>
 
     <string name="level_advanced">감지 수준: 고급 · 리더기 접근을 결제 전에 감지할 수 있는 기기예요</string>
-    <string name="level_basic">감지 수준: 기본 · 이 기기는 일부 상황에서만 감지할 수 있어요</string>
+    <string name="level_basic">앱에 전달된 NFC 태그를 감지해요.</string>
     <string name="level_nfc_off">NFC가 꺼져 있어요 · 태그 자체가 일어나지 않아요</string>
     <string name="level_no_nfc">이 기기는 NFC를 지원하지 않아요</string>
 
@@ -24,6 +24,8 @@
     <string name="check_nfc_desc">NFC 설정이 꺼져 있으면 감지할 대상도 없어요</string>
     <string name="check_battery">배터리 최적화 제외</string>
     <string name="check_battery_desc">일부 기종은 백그라운드 감시를 강제로 멈춰요</string>
+    <string name="check_location">정확한 위치 허용</string>
+    <string name="check_location_desc">이동 여부를 판단하고 태그 위치를 기기에 기록해요.</string>
     <string name="check_onboarding">내 태그 동작 등록</string>
     <string name="check_onboarding_desc">평소 태그하는 동작을 알려주면 오탐이 줄어요</string>
     <string name="check_onboarding_done">%1$d회 등록됨</string>
@@ -34,7 +36,15 @@
 
     <!-- 메인: 감지 기록 -->
     <string name="history_title">최근 감지 기록</string>
-    <string name="history_empty">아직 의심스러운 태그가 없어요.\n감지되면 여기에 기록돼요.</string>
+    <string name="history_empty">감지된 NFC 태그가 여기에 표시돼요.</string>
+    <string name="rule_abnormal">비정상 · 이동 중 각도 변화 없음</string>
+    <string name="rule_normal">정상 · 정지 중 각도 변화 있음</string>
+    <string name="rule_unknown">판단 보류</string>
+    <string name="rule_test_tap">테스트 태그 판정</string>
+    <string name="rule_test_result">테스트 · %1$s</string>
+    <string name="rule_time_location">%1$s\n위치 %2$.5f, %3$.5f (정확도 약 %4$.0fm)</string>
+    <string name="rule_time_no_location">%1$s\n위치 확인 불가</string>
+    <string name="label_local_not_mine">내가 하지 않은 태그로 기록됨</string>
     <string name="reason_bag">가방·주머니 속에서 태그됨</string>
     <string name="reason_no_gesture">꺼내는 동작 없이 태그됨</string>
     <string name="reason_ambiguous">의도가 불확실한 태그</string>
@@ -70,4 +80,5 @@
     <string name="notif_channel_monitor">NFC 보호 실행 중</string>
     <string name="notif_monitor_title">NFC Guard 보호 중</string>
     <string name="notif_monitor_text">의도하지 않은 NFC 태그를 감시하고 있어요.</string>
+    <string name="notif_rule_abnormal">이동 중 휴대폰 각도 변화 없이 NFC 태그가 감지됐어요. 최근 감지 기록을 확인하세요.</string>
 </resources>

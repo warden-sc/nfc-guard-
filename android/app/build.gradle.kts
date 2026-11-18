@@ -27,6 +27,11 @@ android {
         viewBinding = true
     }
 
+    packaging {
+        // The rule-only MVP never calls Interpreter. The legacy binary triggers warnings on 16 KB devices.
+        jniLibs.excludes.add("**/libtensorflowlite_jni.so")
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

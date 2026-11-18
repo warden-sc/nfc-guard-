@@ -6,14 +6,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
-import kotlin.random.Random
 
 /**
  * 중요: 이 서비스는 실제 결제/교통카드 AID를 직접 처리하지 않는다.
  * (그건 이미 OS/Wallet/카드 발급사 앱이 담당 - 여기서 가로채면 실결제가 깨짐)
  *
- * 이 서비스가 하는 일은 "필드가 감지된 시점"이라는 이벤트 자체를 잡아서
- * MotionBuffer 스냅샷을 조회 -> 위험도 스코어 계산 -> 비동기 리포트만 남기는 것.
+ * 앱에 전달된 이벤트 시각을 기준으로 위치·자이로 규칙을 평가하고 결과를 기기에 기록한다.
  * processCommandApdu는 원래 흐름을 방해하지 않도록 즉시 통과 응답을 돌려준다.
  *
  * 실제 프로덕션에서는 이 서비스가 결제 AID와 "병렬로" 등록되어 필드 감지 브로드캐스트만
@@ -26,18 +24,6 @@ import kotlin.random.Random
  * 실기기 검증 전에는 실험 기능으로 취급할 것.
  */
 class NfcGuardHceService : HostApduService() {
-
-    private lateinit var motionBuffer: MotionBuffer
-    private lateinit var deviceContextMonitor: DeviceContextMonitor
-    private var baseline: UserGestureBaseline? = null
-
-    override fun onCreate() {
-        super.onCreate()
-        val app = application as NfcGuardApp
-        motionBuffer = app.motionBuffer
-        deviceContextMonitor = app.deviceContextMonitor
-        baseline = GestureBaselineStore.load(applicationContext)
-    }
 
     override fun processCommandApdu(commandApdu: ByteArray?, extras: Bundle?): ByteArray {
         onFieldDetected("apdu")
@@ -56,7 +42,7 @@ class NfcGuardHceService : HostApduService() {
     /**
      * 필드 감지 1회당 판정 1회. 태그 한 번에 APDU가 여러 개 오고(SELECT, READ ...)
      * 폴링 프레임도 초당 여러 번 오므로 디바운스하지 않으면 같은 태그가 여러 번 신고되어
-     * 반복 카운트(AnomalyReporter 에스컬레이션)가 부풀려진다.
+     * 감지 기록과 알림이 중복된다.
      */
     private fun onFieldDetected(trigger: String) {
         if (!ProtectionSettings.isEnabled(applicationContext)) return
@@ -67,37 +53,7 @@ class NfcGuardHceService : HostApduService() {
             lastFieldDetectedAtNanos = fieldDetectedAtNanos
         }
 
-        // 1) 주변상태(근접/조도/화면)는 지금 즉시 고정
-        val deviceContext = deviceContextMonitor.snapshot()
-
-        // 2) 화면 꺼짐 중엔 센서값이 하드웨어 FIFO에 남아 있으므로 flush 후 판정.
-        //    판정/신고는 사후 알림용이라 응답(아래 return)을 기다리게 하지 않는다.
-        motionBuffer.flushThen {
-            val samples = motionBuffer.snapshot().filter { it.tNanos <= fieldDetectedAtNanos }
-            val heuristic = GestureMatcher.evaluate(samples, baseline, deviceContext)
-            // 학습된 온디바이스 모델이 있으면 점수를 섞음 (없거나 실패하면 휴리스틱 단독)
-            val result = ModelUpdater.current?.let { model ->
-                runCatching { RiskBlender.blend(heuristic, model.predictIntentionalProb(samples), model.spec) }
-                    .getOrNull()
-            } ?: heuristic
-
-            Log.d(TAG, "field detected via $trigger, risk=${result.riskScore} reason=${result.reason} pocket=${result.pocketScore}")
-
-            // 3) 트랜잭션은 절대 막지 않음. 위험도가 높아도 정상 응답을 그대로 통과.
-            //    대신 비동기로 서버에 신고 -> 카드사/발급 서버 측 사후 대응(세션 플래그) 트리거
-            if (result.riskScore > RISK_REPORT_THRESHOLD) {
-                AnomalyReporter.reportAsync(
-                    applicationContext,
-                    result = result,
-                    deviceContext = deviceContext,
-                    samples = samples,
-                    detectedAtNanos = fieldDetectedAtNanos
-                )
-            } else if (Random.nextDouble() < NORMAL_SAMPLE_UPLOAD_RATE) {
-                // 정상 판정 이벤트도 일부 업로드: 의심 이벤트만 모이면 학습 데이터가 한쪽으로 치우침
-                AnomalyReporter.uploadNormalSampleAsync(applicationContext, result, deviceContext, samples, fieldDetectedAtNanos)
-            }
-        }
+        (application as NfcGuardApp).evaluateTap(trigger, fieldDetectedAtNanos)
     }
 
     override fun onDeactivated(reason: Int) {
@@ -106,8 +62,6 @@ class NfcGuardHceService : HostApduService() {
 
     companion object {
         private const val TAG = "NfcGuardHce"
-        private const val RISK_REPORT_THRESHOLD = 0.4
-        private const val NORMAL_SAMPLE_UPLOAD_RATE = 0.05
         private val SELECT_OK_SW = byteArrayOf(0x90.toByte(), 0x00)
         private const val FIELD_DEBOUNCE_NANOS = 3_000_000_000L // 3초
 

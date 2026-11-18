@@ -61,10 +61,10 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
 
 **절차**
 1. 폰: 개발자 옵션 > USB 디버깅 켜기, NFC 켜기
-2. Android Studio에서 실기기로 Run → 앱에서 알림 권한 허용, 보호 켜기
+2. Android Studio에서 실기기로 Run → 메인 화면에서 정확한 위치 및 알림 권한을 허용하고 보호를 켭니다. 위치 서비스도 켭니다. 재부팅 후에는 앱 화면을 한 번 열어 위치 수집을 시작합니다.
 3. 로그 보기:
    ```bash
-   adb logcat -s NfcGuardHce AnomalyReporter NfcGuardMain BackendClient ModelUpdater
+   adb logcat -s NfcGuardHce AnomalyReporter NfcGuardMain
    ```
    - `NfcGuardMain`의 `observeModeSupported=true/false`로 기기의 감지 수준 확인
 4. 리더기 테스트:
@@ -72,10 +72,10 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
    pip install pyscard
    python tools/hce_select_test.py --repeat 5 --interval 4
    ```
-   - 폰을 손에 들고 꺼내서 대기 → 낮은 점수가 예상되는 규칙 가설을 확인하고 실제 결과 기록
-   - 폰을 가방/파우치에 넣은 채 리더기 위 → `tapped_while_in_bag_or_pocket`, 알림 + 진동이 나오는지 확인. 차폐 파우치는 NFC 통신 자체가 안 될 수 있으므로 별도 구분
-   - 화면 끈 상태에서도 반복 (센서 FIFO flush 경로 검증)
-5. 서버 연동 확인: 아래 서버를 띄운 뒤 감지 → 알림의 "내가 태그함/내가 안 함" → 서버 export에 라벨 반영
+   - 정지하고 위치 속도가 안정된 뒤, 태그 직전 2초 안에 폰의 각도를 바꿉니다. `NORMAL` 기록을 확인합니다.
+   - 안전한 시험 공간에서 이동이 확인된 상태로 폰의 각도를 유지하며 데모 AID를 태그합니다. `ABNORMAL` 기록과 알림·진동을 확인합니다.
+   - 서로 다른 조합이나 위치·센서 근거가 부족하면 `UNKNOWN`을 확인합니다. 적합한 GPS 속도 데이터가 부족한 실내에서는 야외에서도 재시험합니다.
+5. 최근 감지 기록에서 시각과 위치, 로컬 사용자 응답을 확인합니다. 디버그 앱에서는 **테스트 태그 판정** 버튼으로 리더기 없이 같은 규칙의 입력·기록 흐름을 확인할 수 있습니다.
 
 ### 핵심 모듈 위치
 | 파일 | 역할 |

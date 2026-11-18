@@ -9,6 +9,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -21,19 +22,19 @@ import androidx.core.content.ContextCompat
 class MotionForegroundService : Service() {
 
     private var wakeLock: PowerManager.WakeLock? = null
+    private val sensorServiceType: Int
+        get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        } else 0
 
     override fun onCreate() {
         super.onCreate()
         val notification = buildOngoingNotification()
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        } else 0
-        ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, type)
+        ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, sensorServiceType)
 
         val app = application as NfcGuardApp
         app.motionBuffer.start()
         app.deviceContextMonitor.start()
-        ModelUpdater.schedulePeriodicCheck(this)
 
         // 하드웨어 FIFO가 작은 기종은 화면 꺼짐 중 데이터가 끊기므로 CPU를 깨워둔다 (배터리 비용 있음)
         if (!app.motionBuffer.hasSufficientFifo()) {
@@ -45,17 +46,32 @@ class MotionForegroundService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!ProtectionSettings.isEnabled(this)) {
+            stopSelf(startId)
+            return START_NOT_STICKY
+        }
+        if (intent?.getBooleanExtra(EXTRA_LOCATION, false) == true && AndroidMovementInput.hasFineLocation(this)) {
+            try {
+                ServiceCompat.startForeground(
+                    this, ONGOING_NOTIF_ID, buildOngoingNotification(),
+                    sensorServiceType or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                )
+                (application as NfcGuardApp).movementInput.start()
+            } catch (e: SecurityException) {
+                Log.w("NfcGuardMotion", "Location service unavailable", e)
+            }
+        }
+        return START_STICKY
+    }
 
     override fun onDestroy() {
         wakeLock?.release()
         wakeLock = null
-        // 사용자가 보호를 끈 경우 센서 수집도 중단 (배터리)
-        if (!ProtectionSettings.isEnabled(this)) {
-            val app = application as NfcGuardApp
-            app.motionBuffer.stop()
-            app.deviceContextMonitor.stop()
-        }
+        val app = application as NfcGuardApp
+        app.movementInput.stop()
+        app.motionBuffer.stop()
+        app.deviceContextMonitor.stop()
         super.onDestroy()
     }
 
@@ -81,9 +97,11 @@ class MotionForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "nfcguard_monitor"
         private const val ONGOING_NOTIF_ID = 1000
+        private const val EXTRA_LOCATION = "start_location"
 
-        fun start(context: Context) {
-            ContextCompat.startForegroundService(context, Intent(context, MotionForegroundService::class.java))
+        fun start(context: Context, withLocation: Boolean = false) {
+            val intent = Intent(context, MotionForegroundService::class.java).putExtra(EXTRA_LOCATION, withLocation)
+            ContextCompat.startForegroundService(context, intent)
         }
 
         fun stop(context: Context) {

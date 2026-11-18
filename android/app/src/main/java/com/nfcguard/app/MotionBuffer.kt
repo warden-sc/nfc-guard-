@@ -36,6 +36,7 @@ class MotionBuffer(context: Context, private val windowMillis: Long = 2500L) : S
     @Volatile private var lastGz = 0f
 
     private val buffer = ArrayDeque<MotionSample>()
+    private val rotationBuffer = ArrayDeque<RotationSample>()
     private val lock = Any()
     @Volatile private var started = false
 
@@ -56,6 +57,11 @@ class MotionBuffer(context: Context, private val windowMillis: Long = 2500L) : S
     fun stop() {
         synchronized(lock) {
             sensorManager.unregisterListener(this)
+            buffer.clear()
+            rotationBuffer.clear()
+            lastGx = 0f
+            lastGy = 0f
+            lastGz = 0f
             started = false
         }
     }
@@ -67,13 +73,21 @@ class MotionBuffer(context: Context, private val windowMillis: Long = 2500L) : S
     fun hasSufficientFifo(): Boolean {
         val needed = (windowMillis / 20L).toInt() // 50Hz 기준 샘플 수
         val accelFifo = linearAccel?.fifoMaxEventCount ?: 0
-        return accelFifo >= needed
+        return accelFifo >= needed && (gyro?.fifoMaxEventCount ?: 0) >= needed
     }
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
             Sensor.TYPE_GYROSCOPE -> {
                 lastGx = event.values[0]; lastGy = event.values[1]; lastGz = event.values[2]
+                synchronized(lock) {
+                    if (!started) return
+                    rotationBuffer.addLast(RotationSample(event.timestamp, lastGx, lastGy, lastGz))
+                    val cutoff = event.timestamp - windowMillis * 1_000_000L
+                    while (rotationBuffer.isNotEmpty() && rotationBuffer.first.tNanos < cutoff) {
+                        rotationBuffer.removeFirst()
+                    }
+                }
             }
             Sensor.TYPE_LINEAR_ACCELERATION -> {
                 val sample = MotionSample(
@@ -95,12 +109,13 @@ class MotionBuffer(context: Context, private val windowMillis: Long = 2500L) : S
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     override fun onFlushCompleted(sensor: Sensor) {
-        // 가속도 flush가 끝나면 버퍼가 최신 상태 (자이로는 lastG* 갱신용이라 기다리지 않음)
-        if (sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) mainHandler.post { runPendingFlushCallbacks() }
+        if (sensor.type == Sensor.TYPE_GYROSCOPE) mainHandler.post { runPendingFlushCallbacks() }
     }
 
     /** NFC 필드 감지 시점 기준, 최근 windowMillis 구간 스냅샷을 즉시 반환 (블로킹 없음) */
     fun snapshot(): List<MotionSample> = synchronized(lock) { buffer.toList() }
+
+    fun rotationSnapshot(): List<RotationSample> = synchronized(lock) { rotationBuffer.toList() }
 
     /**
      * 하드웨어 FIFO에 쌓인 이벤트를 모두 받아온 뒤 메인 스레드에서 callback 실행.

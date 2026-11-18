@@ -37,6 +37,7 @@ object NotificationHelper {
             )
         }
         val text = when (reason) {
+            "tap_rule" -> context.getString(R.string.notif_rule_abnormal)
             "tapped_while_in_bag_or_pocket" ->
                 "기기가 가방/주머니 안에 있는 상태에서 NFC 태그가 감지되었습니다. 카드사 거래내역을 확인하세요."
             "no_intentional_gesture_detected" ->

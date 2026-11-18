@@ -10,10 +10,10 @@ import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.ColorRes
 import androidx.appcompat.app.AppCompatActivity
@@ -29,7 +29,7 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * 메인 화면: 보호 상태/스위치, 기기 감지 수준, 설정 체크리스트, 최근 감지 기록, AI 모델 상태.
+ * 메인 화면: 감시 상태, 권한 체크리스트, 최근 감지 기록.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -43,7 +43,12 @@ class MainActivity : AppCompatActivity() {
             refresh()
         }
 
-    // 감지 기록/온보딩 baseline이 바뀌면(알림 버튼으로 라벨링 등) 화면 갱신
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            startMonitoringIfEnabled()
+            refresh()
+        }
+
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,25 +59,27 @@ class MainActivity : AppCompatActivity() {
         binding.protectionSwitch.isChecked = ProtectionSettings.isEnabled(this)
         binding.protectionSwitch.setOnCheckedChangeListener { _, checked ->
             ProtectionSettings.setEnabled(this, checked)
-            if (checked) MotionForegroundService.start(this) else MotionForegroundService.stop(this)
+            if (checked) startMonitoringIfEnabled() else MotionForegroundService.stop(this)
             refresh()
         }
 
         if (!hasNotificationPermission()) requestNotificationPermission()
-        if (ProtectionSettings.isEnabled(this)) MotionForegroundService.start(this)
+        binding.debugTap.visibility = if (BuildConfig.DEBUG) View.VISIBLE else View.GONE
+        binding.debugTap.setOnClickListener {
+            (application as NfcGuardApp).evaluateTap("debug_test", SystemClock.elapsedRealtimeNanos())
+        }
         logNfcCapabilities()
     }
 
     override fun onResume() {
         super.onResume()
         EventLogStore.prefs(this).registerOnSharedPreferenceChangeListener(prefsListener)
-        GestureBaselineStore.prefs(this).registerOnSharedPreferenceChangeListener(prefsListener)
+        startMonitoringIfEnabled()
         refresh() // 설정 화면(NFC/배터리/알림)에서 돌아왔을 때 체크리스트 반영
     }
 
     override fun onPause() {
         EventLogStore.prefs(this).unregisterOnSharedPreferenceChangeListener(prefsListener)
-        GestureBaselineStore.prefs(this).unregisterOnSharedPreferenceChangeListener(prefsListener)
         super.onPause()
     }
 
@@ -80,10 +87,13 @@ class MainActivity : AppCompatActivity() {
         renderStatus()
         renderChecklist()
         renderHistory()
-        val model = ModelUpdater.current
-        binding.modelStatus.text = if (model != null) {
-            getString(R.string.model_active, model.spec.version.toString())
-        } else getString(R.string.model_inactive)
+        binding.debugTap.isEnabled = ProtectionSettings.isEnabled(this)
+    }
+
+    private fun startMonitoringIfEnabled() {
+        if (ProtectionSettings.isEnabled(this)) {
+            MotionForegroundService.start(this, withLocation = AndroidMovementInput.hasFineLocation(this))
+        }
     }
 
     private fun renderStatus() {
@@ -98,7 +108,6 @@ class MainActivity : AppCompatActivity() {
             when {
                 adapter == null -> R.string.level_no_nfc
                 !adapter.isEnabled -> R.string.level_nfc_off
-                isObserveModeSupported(adapter) -> R.string.level_advanced
                 else -> R.string.level_basic
             }
         )
@@ -124,15 +133,12 @@ class MainActivity : AppCompatActivity() {
             ok = pm.isIgnoringBatteryOptimizations(packageName), actionText = R.string.action_open_settings
         ) { startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
 
-        val baseline = GestureBaselineStore.load(this)
         bindRow(
-            binding.rowOnboarding, R.string.check_onboarding,
-            if (baseline != null) getString(R.string.check_onboarding_done, baseline.sampleCount)
-            else getString(R.string.check_onboarding_desc),
-            ok = baseline != null,
-            actionText = if (baseline != null) R.string.action_redo else R.string.action_register,
-            showActionWhenOk = true
-        ) { startActivity(Intent(this, OnboardingActivity::class.java)) }
+            binding.rowLocation, R.string.check_location, getString(R.string.check_location_desc),
+            ok = AndroidMovementInput.hasFineLocation(this), actionText = R.string.action_allow
+        ) {
+            locationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
     }
 
     private fun bindRow(
@@ -165,52 +171,50 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun bindEvent(item: ItemEventBinding, entry: EventLogStore.Entry) {
-        val (reasonRes, colorRes) = when (entry.reason) {
-            "tapped_while_in_bag_or_pocket" -> R.string.reason_bag to R.color.nfc_danger
-            "no_intentional_gesture_detected" -> R.string.reason_no_gesture to R.color.nfc_danger
-            "ambiguous_low_confidence" -> R.string.reason_ambiguous to R.color.nfc_warning
-            else -> R.string.reason_normal to R.color.nfc_ok
+        val (reasonRes, colorRes) = when (entry.verdict) {
+            TapVerdict.ABNORMAL -> R.string.rule_abnormal to R.color.nfc_danger
+            TapVerdict.NORMAL -> R.string.rule_normal to R.color.nfc_ok
+            TapVerdict.UNKNOWN -> R.string.rule_unknown to R.color.nfc_warning
+            null -> when (entry.reason) {
+                "tapped_while_in_bag_or_pocket" -> R.string.reason_bag to R.color.nfc_danger
+                "no_intentional_gesture_detected" -> R.string.reason_no_gesture to R.color.nfc_danger
+                "ambiguous_low_confidence" -> R.string.reason_ambiguous to R.color.nfc_warning
+                else -> R.string.reason_normal to R.color.nfc_ok
+            }
         }
-        item.eventReason.setText(reasonRes)
+        val reason = getString(reasonRes)
+        item.eventReason.text = if (entry.test) getString(R.string.rule_test_result, reason) else reason
         ImageViewCompat.setImageTintList(item.eventIcon, colorList(colorRes))
+        item.eventRisk.visibility = if (entry.verdict == null) View.VISIBLE else View.GONE
         item.eventRisk.setTextColor(ContextCompat.getColor(this, colorRes))
         item.eventRisk.text = getString(R.string.risk_percent, (entry.riskScore * 100).toInt())
-        item.eventTime.text = timeFormat.format(Date(entry.occurredAtMs))
+        val time = timeFormat.format(Date(entry.occurredAtMs))
+        item.eventTime.text = entry.location?.let {
+            getString(R.string.rule_time_location, time, it.latitude, it.longitude, it.accuracyMeters)
+        } ?: if (entry.verdict != null) getString(R.string.rule_time_no_location, time) else time
 
-        val canLabel = entry.label == null && entry.eventId != null
+        val canLabel = entry.label == null && !entry.test
         item.eventLabelButtons.visibility = if (canLabel) View.VISIBLE else View.GONE
         item.eventLabelState.setText(
             when {
                 entry.label == true -> R.string.label_confirmed_mine
-                entry.label == false -> R.string.label_confirmed_not_mine
-                entry.eventId == null -> R.string.label_pending_upload
+                entry.label == false -> R.string.label_local_not_mine
                 else -> R.string.label_question
             }
         )
-        val eventId = entry.eventId ?: return
-        item.eventMine.setOnClickListener { submitLabel(item, eventId, wasIntentional = true) }
-        item.eventNotMine.setOnClickListener { submitLabel(item, eventId, wasIntentional = false) }
+        item.eventLabelState.visibility = if (entry.test) View.GONE else View.VISIBLE
+        item.eventMine.setOnClickListener { submitLabel(entry.localId, wasIntentional = true) }
+        item.eventNotMine.setOnClickListener { submitLabel(entry.localId, wasIntentional = false) }
     }
 
-    private fun submitLabel(item: ItemEventBinding, eventId: Long, wasIntentional: Boolean) {
-        item.eventMine.isEnabled = false
-        item.eventNotMine.isEnabled = false
-        LabelActionReceiver.submitAsync(this, eventId, wasIntentional) { ok ->
-            if (isFinishing || isDestroyed) return@submitAsync
-            if (!ok) {
-                item.eventMine.isEnabled = true
-                item.eventNotMine.isEnabled = true
-                Toast.makeText(this, R.string.label_send_failed, Toast.LENGTH_SHORT).show()
-                return@submitAsync
-            }
-            // 성공 시 EventLogStore 변경 -> prefsListener가 목록을 다시 그림
-            if (!wasIntentional) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.not_mine_dialog_title)
-                    .setMessage(R.string.not_mine_dialog_body)
-                    .setPositiveButton(R.string.action_ok, null)
-                    .show()
-            }
+    private fun submitLabel(localId: String, wasIntentional: Boolean) {
+        EventLogStore.setLocalLabel(this, localId, wasIntentional)
+        if (!wasIntentional) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.not_mine_dialog_title)
+                .setMessage(R.string.not_mine_dialog_body)
+                .setPositiveButton(R.string.action_ok, null)
+                .show()
         }
     }
 

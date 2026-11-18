@@ -24,6 +24,34 @@ object AnomalyReporter {
     private const val ESCALATION_COUNT = 3
     private const val IMMEDIATE_ALERT_THRESHOLD = 0.7
 
+    fun recordRuleTapAsync(
+        context: Context,
+        verdict: TapVerdict,
+        movement: AndroidMovementInput.Snapshot,
+        trigger: String,
+        detectedAtNanos: Long
+    ) {
+        val ageMs = (SystemClock.elapsedRealtimeNanos() - detectedAtNanos) / 1_000_000L
+        val occurredAtMs = System.currentTimeMillis() - ageMs
+        val location = movement.location?.takeIf {
+            it.latitude.isFinite() && it.longitude.isFinite() && it.accuracy.isFinite()
+        }?.let { EventLogStore.TapLocation(it.latitude, it.longitude, it.accuracy) }
+        executor.execute {
+            Log.i(TAG, "tap=$trigger verdict=$verdict movement=${movement.state}")
+            val test = trigger == "debug_test"
+            val alert = verdict == TapVerdict.ABNORMAL && !test
+            EventLogStore.add(context, EventLogStore.Entry(
+                localId = UUID.randomUUID().toString(), occurredAtMs = occurredAtMs,
+                riskScore = 0.0, reason = "tap_rule", alerted = alert, eventId = null, label = null,
+                verdict = verdict, location = location, test = test
+            ))
+            if (alert) {
+                NotificationHelper.notifySuspiciousActivity(context, NotificationHelper.newNotificationId(), "tap_rule", 1)
+                HapticAlert.vibrateSuspicious(context)
+            }
+        }
+    }
+
     fun reportAsync(
         context: Context,
         result: GestureMatcher.Result,

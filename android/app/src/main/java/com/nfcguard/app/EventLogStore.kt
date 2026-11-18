@@ -15,6 +15,8 @@ object EventLogStore {
     private const val KEY_ENTRIES = "entries"
     private const val MAX_ENTRIES = 30
 
+    data class TapLocation(val latitude: Double, val longitude: Double, val accuracyMeters: Float)
+
     data class Entry(
         val localId: String,
         val occurredAtMs: Long,
@@ -22,7 +24,10 @@ object EventLogStore {
         val reason: String,
         val alerted: Boolean,
         val eventId: Long?,  // 서버 업로드 성공 시 채워짐 (라벨 버튼은 이게 있어야 동작)
-        val label: Boolean?  // true = 내가 태그함, false = 내가 안 함, null = 미확정
+        val label: Boolean?, // true = 내가 태그함, false = 내가 안 함, null = 미확정
+        val verdict: TapVerdict? = null,
+        val location: TapLocation? = null,
+        val test: Boolean = false
     )
 
     fun prefs(context: Context): SharedPreferences =
@@ -47,6 +52,11 @@ object EventLogStore {
         write(context, read(context).map { if (it.eventId == eventId) it.copy(label = wasIntentional) else it })
     }
 
+    @Synchronized
+    fun setLocalLabel(context: Context, localId: String, wasIntentional: Boolean) {
+        write(context, read(context).map { if (it.localId == localId) it.copy(label = wasIntentional) else it })
+    }
+
     private fun read(context: Context): List<Entry> {
         val raw = prefs(context).getString(KEY_ENTRIES, null) ?: return emptyList()
         return runCatching {
@@ -60,7 +70,12 @@ object EventLogStore {
                     reason = o.getString("reason"),
                     alerted = o.optBoolean("alerted"),
                     eventId = if (o.has("eventId")) o.getLong("eventId") else null,
-                    label = if (o.has("label")) o.getBoolean("label") else null
+                    label = if (o.has("label")) o.getBoolean("label") else null,
+                    verdict = TapVerdict.values().firstOrNull { it.name == o.optString("verdict") },
+                    location = o.optJSONObject("location")?.let {
+                        TapLocation(it.getDouble("latitude"), it.getDouble("longitude"), it.getDouble("accuracyMeters").toFloat())
+                    },
+                    test = o.optBoolean("test")
                 )
             }
         }.getOrDefault(emptyList())
@@ -77,6 +92,15 @@ object EventLogStore {
                 put("alerted", e.alerted)
                 e.eventId?.let { put("eventId", it) }
                 e.label?.let { put("label", it) }
+                e.verdict?.let { put("verdict", it.name) }
+                e.location?.let { location ->
+                    put("location", JSONObject().apply {
+                        put("latitude", location.latitude)
+                        put("longitude", location.longitude)
+                        put("accuracyMeters", location.accuracyMeters.toDouble())
+                    })
+                }
+                if (e.test) put("test", true)
             })
         }
         prefs(context).edit().putString(KEY_ENTRIES, arr.toString()).apply()
