@@ -36,8 +36,7 @@ targetSdk 35+는 화면이 시스템 바 아래까지 그려지므로 새 화면
 ### 서버 주소 (`BuildConfig.BACKEND_URL`)
 | 실행 환경 | 설정 |
 |---|---|
-| 에뮬레이터 → PC의 로컬 서버 | 기본값 `http://10.0.2.2:8080` 그대로 |
-| 실기기(USB) → PC의 로컬 서버 | `adb reverse tcp:8080 tcp:8080` 실행 후 `~/.gradle/gradle.properties`에 `nfcguard.backendUrl=http://localhost:8080` |
+| 실기기(USB)·에뮬레이터 → PC의 로컬 서버 | 기본값 `http://localhost:8080` 그대로, PC에서 `adb reverse tcp:8080 tcp:8080` 실행 (USB 다시 꽂으면 재실행) |
 | 실서버 | `nfcguard.backendUrl=https://...` (평문 HTTP는 10.0.2.2/localhost만 허용됨) |
 
 ### 빌드 설정값 (Gradle 속성)
@@ -45,7 +44,7 @@ targetSdk 35+는 화면이 시스템 바 아래까지 그려지므로 새 화면
 
 | 속성 | 용도 | 기본값 |
 |---|---|---|
-| `nfcguard.backendUrl` | 서버 주소 | `http://10.0.2.2:8080` |
+| `nfcguard.backendUrl` | 서버 주소 | `http://localhost:8080` |
 | `nfcguard.privacyPolicyUrl` | 앱의 개인정보처리방침 링크 | `{backendUrl}/privacy.html` |
 | `nfcguard.cloudProjectNumber` | Play Integrity용 Google Cloud 프로젝트 번호 | 0 (지정 안 함) |
 | `nfcguard.versionCode` / `nfcguard.versionName` | 스토어 업로드 버전 (업로드마다 versionCode 증가) | 1 / 0.1.0 |

@@ -17,10 +17,10 @@ android {
         // Play 업로드마다 versionCode는 반드시 증가해야 함
         versionCode = (prop("nfcguard.versionCode") ?: "1").toInt()
         versionName = prop("nfcguard.versionName") ?: "0.1.0"
-        // server-java 주소. 기본값은 에뮬레이터 -> PC 로컬 서버(10.0.2.2).
-        // 실기기 + `adb reverse tcp:8080 tcp:8080` 이면 -Pnfcguard.backendUrl=http://localhost:8080
-        // (또는 ~/.gradle/gradle.properties 에 nfcguard.backendUrl=...). 실배포는 HTTPS 주소로.
-        val backendUrl = prop("nfcguard.backendUrl") ?: "http://10.0.2.2:8080"
+        // server-java 주소. 기본값 localhost + `adb reverse tcp:8080 tcp:8080` 이면
+        // 실기기·에뮬레이터 모두 PC에서 실행 중인 서버에 연결된다 (CI가 만든 APK 그대로 사용 가능).
+        // 실배포는 -Pnfcguard.backendUrl=https://... (또는 ~/.gradle/gradle.properties)
+        val backendUrl = prop("nfcguard.backendUrl") ?: "http://localhost:8080"
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
         // 개인정보처리방침 공개 URL (Play Console에도 같은 주소 등록). 기본: 서버가 서빙하는 정적 페이지
         val privacyUrl = prop("nfcguard.privacyPolicyUrl") ?: "$backendUrl/privacy.html"
