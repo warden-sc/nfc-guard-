@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  기본은 HTTPS만 허용. 로컬 개발 서버(에뮬레이터 10.0.2.2 / localhost)만 평문 HTTP 예외.
+  실배포 서버는 반드시 HTTPS로 (BuildConfig.BACKEND_URL 교체).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

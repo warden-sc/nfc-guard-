@@ -16,16 +16,27 @@ NFC Guard 자체 라벨 데이터(의도적 태깅 vs 비정상 필드응답)로
      릴리즈 체크포인트를 받아 PRETRAINED_BACKBONE_PATH에 배치
   2) 위 데이터가 없다면 pretrain_backbone_from_scratch.py 로 UCI HAR 등
      공개 데이터셋을 이용해 자체적으로 백본을 먼저 만들어도 됨
+     (이 경우 백본 첫 층에 입력 정규화가 포함되어 있어 앱은 원시 센서값을 그대로 넣으면 됨.
+      외부 체크포인트를 쓸 땐 그 모델이 기대하는 단위/정규화를 반드시 확인할 것)
+
+실행:
+  NFCGUARD_ADMIN_API_KEY=... python finetune.py [--signing-key ./keys/model_signing_private.pem]
+산출물은 기본적으로 ../server-java/models 에 쓰여 서버가 바로 앱에 배포한다 (NFCGUARD_MODEL_DIR로 변경).
 """
+import argparse
+import os
+
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
-from data_loader import load_from_server, build_dataset, WINDOW_LEN, FEATURES
+from data_loader import load_from_server, build_dataset, stratified_split, WINDOW_LEN, FEATURES, RESAMPLE_METHOD
+from model_export import build_metadata, choose_threshold, roc_auc, write_artifacts
 
 PRETRAINED_BACKBONE_PATH = "./pretrained/har_backbone.keras"
-OUTPUT_TFLITE_PATH = "./models/gesture_classifier.tflite"
-SERVER_URL = "http://localhost:8080"
+# server-java의 nfcguard.model.dir(기본 ./models, server-java 기준)과 같은 위치
+MODEL_OUTPUT_DIR = os.environ.get("NFCGUARD_MODEL_DIR", "../server-java/models")
+SERVER_URL = os.environ.get("NFCGUARD_SERVER_URL", "http://localhost:8080")
 
 FINE_TUNE_EPOCHS = 15
 BATCH_SIZE = 16
@@ -35,7 +46,7 @@ VALIDATION_SPLIT = 0.2
 def load_backbone(path: str) -> keras.Model:
     try:
         backbone = keras.models.load_model(path)
-    except (IOError, OSError) as e:
+    except (IOError, OSError, ValueError) as e:  # Keras 3는 파일 없음을 ValueError로 냄
         raise FileNotFoundError(
             f"사전학습 백본을 {path} 에서 못 찾음. 파일 상단 주석의 준비 방법을 먼저 진행할 것."
         ) from e
@@ -68,18 +79,25 @@ def build_finetune_model(feature_extractor: keras.Model) -> keras.Model:
     return model
 
 
-def export_tflite(model: keras.Model, output_path: str) -> None:
+def convert_tflite(model: keras.Model) -> bytes:
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]  # 온디바이스용 경량화
-    tflite_model = converter.convert()
-    with open(output_path, "wb") as f:
-        f.write(tflite_model)
-    print(f"[finetune] TFLite 모델 저장 완료: {output_path}")
+    return converter.convert()
 
 
 def main():
-    print("[finetune] 서버에서 라벨링 데이터 가져오는 중...")
-    records = load_from_server(SERVER_URL)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--signing-key", default=os.environ.get("NFCGUARD_MODEL_SIGNING_KEY"),
+                        help="model_export.py --generate-key 로 만든 개인키 PEM")
+    parser.add_argument("--dataset-file", help="서버 대신 JSONL 파일에서 읽기 (오프라인 실험용)")
+    args = parser.parse_args()
+
+    if args.dataset_file:
+        from data_loader import load_from_file
+        records = load_from_file(args.dataset_file)
+    else:
+        print("[finetune] 서버에서 라벨링 데이터 가져오는 중...")
+        records = load_from_server(SERVER_URL)
     X, y = build_dataset(records)
     print(f"[finetune] 데이터 {len(X)}건 (정상 {int(y.sum())} / 의심 {len(y) - int(y.sum())})")
 
@@ -89,18 +107,35 @@ def main():
             "일반화 성능을 신뢰하기 어려움 - 배포 전 반드시 홀드아웃 검증 필요."
         )
 
+    X_train, y_train, X_val, y_val = stratified_split(X, y, VALIDATION_SPLIT)
+
     feature_extractor = load_backbone(PRETRAINED_BACKBONE_PATH)
     model = build_finetune_model(feature_extractor)
 
     model.fit(
-        X, y,
+        X_train, y_train,
         epochs=FINE_TUNE_EPOCHS,
         batch_size=BATCH_SIZE,
-        validation_split=VALIDATION_SPLIT,
-        class_weight=_compute_class_weight(y),
+        validation_data=(X_val, y_val) if len(X_val) else None,
+        class_weight=_compute_class_weight(y_train),
     )
 
-    export_tflite(model, OUTPUT_TFLITE_PATH)
+    # 검증셋으로 앱이 쓸 판정 임계값과 지표 산출 (임계값 0.5 고정은 클래스 불균형에서 부적절)
+    p_val = model.predict(X_val, verbose=0).ravel() if len(X_val) else np.array([])
+    thr = choose_threshold(y_val, p_val) if len(X_val) else {"threshold": 0.5}
+    metrics = {
+        "n_train": int(len(X_train)),
+        "n_val": int(len(X_val)),
+        "n_val_suspicious": int((y_val == 0).sum()),
+        # 탐지 대상(의심) 기준 AUC: 의심일수록 점수가 높도록 1-p 사용
+        "val_auc_suspicious": roc_auc(y_val == 0, 1.0 - p_val) if len(X_val) else None,
+        **{k: v for k, v in thr.items() if k != "threshold"},
+    }
+    print(f"[finetune] 임계값={thr['threshold']:.3f} 지표={metrics}")
+
+    tflite_bytes = convert_tflite(model)
+    metadata = build_metadata(tflite_bytes, WINDOW_LEN, FEATURES, RESAMPLE_METHOD, thr["threshold"], metrics)
+    write_artifacts(MODEL_OUTPUT_DIR, tflite_bytes, metadata, args.signing_key)
 
 
 def _compute_class_weight(y: np.ndarray) -> dict:

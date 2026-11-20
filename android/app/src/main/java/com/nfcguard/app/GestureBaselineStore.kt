@@ -1,9 +1,12 @@
 package com.nfcguard.app
 
 import android.content.Context
+import android.content.SharedPreferences
 
 object GestureBaselineStore {
     private const val PREFS = "nfcguard_baseline"
+
+    fun prefs(context: Context): SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     fun save(context: Context, baseline: UserGestureBaseline) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()

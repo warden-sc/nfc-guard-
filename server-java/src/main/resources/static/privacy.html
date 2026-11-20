@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFC Guard 개인정보처리방침</title>
+<!--
+  초안: 출시 전 법률 검토 필수. [대괄호] 항목은 운영 주체가 채워야 함.
+  앱 동작(android/)·서버 동작(server-java/)과 다르게 쓰면 안 됨 - 코드가 바뀌면 이 문서도 함께 수정.
+-->
+<style>
+  :root { --bg:#f4f6f9; --fg:#141b24; --muted:#566273; --card:#fff; --line:#d5dbe3; --accent:#0e7c72; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0a1a33; --fg:#e6ecf3; --muted:#a5b2c4; --card:#12243f; --line:#2a3d5c; --accent:#2dd4bf; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.7 -apple-system, "Noto Sans KR", sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:26px; } h2 { font-size:19px; margin-top:32px; border-top:1px solid var(--line); padding-top:20px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); font-size:15px; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { width:30%; } .muted { color:var(--muted); font-size:14px; } a { color:var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>NFC Guard 개인정보처리방침</h1>
+<p class="muted">시행일: [YYYY-MM-DD] · 운영: [운영 주체(개인/법인명)]</p>
+
+<p>NFC Guard(이하 "앱")는 사용자가 의도하지 않은 NFC 태그를 감지해 알려주는 Android 앱입니다.
+[운영 주체]는 「개인정보 보호법」 등 관련 법령을 지키며, 앱이 어떤 정보를 어디에 저장하고 무엇을 서버로 보내는지 아래와 같이 알려드립니다.</p>
+
+<h2>1. 기기 안에만 저장되는 정보 (서버로 보내지 않음)</h2>
+<table>
+<tr><th>감지 기록</th><td>감지 시각, 판정 이유와 점수, 사용자의 응답("내가 태그함/안 함"). 최근 30건까지 보관합니다.</td></tr>
+<tr><th>위치 기록 (선택)</th><td>사용자가 "감지 기록에 위치 남기기"를 켠 경우에만, NFC 태그가 감지된 순간 한 번 측정한 위치·정확도 반경·측정 시각. <strong>운영자 서버로 전송하지 않으며</strong> 이동 경로를 계속 추적하지 않습니다.</td></tr>
+<tr><th>내 태그 동작 정보</th><td>태그 동작 등록(온보딩)으로 계산한 개인 기준값.</td></tr>
+<tr><th>움직임 센서 값</th><td>감지 판정을 위해 최근 2.5초의 가속도·자이로 값을 메모리에 계속 덮어쓰며 유지합니다.</td></tr>
+</table>
+<p class="muted">앱 삭제 또는 앱의 "내 데이터 삭제"로 지워집니다.</p>
+
+<h2>2. 서버로 보내는 정보 (데이터 제공에 동의한 경우만)</h2>
+<p>앱을 처음 실행할 때 묻고, 앱의 개인정보 설정에서 언제든 끌 수 있습니다. 동의하지 않아도 감지·알림·기기 내 기록은 그대로 동작합니다.</p>
+<table>
+<tr><th>처리 목적</th><td>의도한 태그와 의도하지 않은 접촉을 구분하는 판정 규칙·AI 모델의 개선</td></tr>
+<tr><th>항목</th><td>
+  · 서버가 발급한 익명 기기 ID(이름·전화번호·광고 ID와 연결하지 않음)<br>
+  · 감지 직전 약 2.5초의 움직임 센서 값(가속도·자이로)<br>
+  · 근접 센서 가려짐 여부, 주변 밝기, 화면 켜짐 여부<br>
+  · 판정 점수·이유, 앱의 판정 모델 버전, 감지 시각<br>
+  · 사용자의 응답("내가 태그함/안 함")과 태그 동작 등록 시의 센서 값</td></tr>
+<tr><th>보내지 않는 정보</th><td>위치, 이름, 연락처, 결제·카드 정보, NFC 통신 내용</td></tr>
+<tr><th>자동 생성 정보</th><td>서버 접속 시 IP 주소·접속 시각이 서버 로그에 남을 수 있습니다(보안·장애 대응 목적, [로그 보관 기간]).</td></tr>
+<tr><th>기기 무결성 확인</th><td>가짜 기기 대량 등록을 막기 위해 최초 등록 시 Google Play Integrity API로 앱·기기의 정상 여부를 확인할 수 있습니다. 이 과정의 정보 처리는 <a href="https://policies.google.com/privacy">Google 개인정보처리방침</a>을 따릅니다.</td></tr>
+</table>
+
+<h2>3. 보유 기간과 파기</h2>
+<ul>
+<li>서버에 받은 감지 데이터는 <strong>받은 날부터 365일</strong>이 지나면 매일 자동 삭제합니다.</li>
+<li>앱의 "내 데이터 삭제" 또는 동의 철회 시 "서버 데이터 삭제"를 선택하면 해당 기기의 감지 데이터·응답·등록 정보를 즉시 삭제합니다.</li>
+<li>전자적 파일은 복구할 수 없는 방법으로 삭제합니다.</li>
+</ul>
+
+<h2>4. 제3자 제공과 처리 위탁</h2>
+<p>개인정보를 제3자에게 제공하지 않습니다. 서비스 운영을 위해 아래와 같이 처리를 위탁합니다.</p>
+<table>
+<tr><th>[클라우드 업체명]</th><td>서버·데이터베이스 운영 (보관 위치: [국가/리전])</td></tr>
+</table>
+<p class="muted">국외 리전을 사용하는 경우 이전되는 국가, 시기, 방법, 보유 기간을 여기에 추가로 적어야 합니다.</p>
+
+<h2>5. 사용자의 권리</h2>
+<ul>
+<li>데이터 제공 동의를 언제든 철회할 수 있습니다(앱 &gt; 개인정보 &gt; 데이터 제공 끄기).</li>
+<li>서버에 보낸 내 데이터를 앱에서 직접 삭제할 수 있습니다(앱 &gt; 개인정보 &gt; 내 데이터 삭제).</li>
+<li>열람·정정·처리정지 요청은 아래 문의처로 연락해 주세요. 익명 기기 ID로 관리하므로 앱의 기기 ID 확인이 필요할 수 있습니다.</li>
+</ul>
+
+<h2>6. 안전성 확보 조치</h2>
+<ul>
+<li>전송 구간 암호화(HTTPS), 기기 인증 키는 서버에 해시로만 저장</li>
+<li>학습 데이터 추출은 관리자 키로만 가능, 접근 권한 최소화</li>
+<li>위치 정보는 서버로 수집하지 않음</li>
+</ul>
+
+<h2>7. 만 14세 미만 아동</h2>
+<p>[아동 이용 정책: 예) 만 14세 미만은 법정대리인 동의 없이 데이터 제공에 동의할 수 없습니다.]</p>
+
+<h2>8. 개인정보 보호책임자 및 문의</h2>
+<table>
+<tr><th>책임자</th><td>[이름 / 직책]</td></tr>
+<tr><th>연락처</th><td>[이메일]</td></tr>
+</table>
+<p class="muted">개인정보 침해 신고·상담: 개인정보침해신고센터(privacy.kisa.or.kr, 국번없이 118), 개인정보분쟁조정위원회(www.kopico.go.kr, 1833-6972)</p>
+
+<h2>9. 변경 안내</h2>
+<p>이 방침이 바뀌면 시행 7일 전부터 앱 또는 이 페이지에 알립니다.</p>
+</main>
+</body>
+</html>

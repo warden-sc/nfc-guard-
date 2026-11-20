@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden}
+body{font-family:'Noto Sans KR',sans-serif;color:#fff;background:linear-gradient(160deg,#12345E 0%,#0A1A33 55%,#071226 100%)}
+.abs{position:absolute}
+.center{left:0;right:0;text-align:center}
+.scene{position:absolute;inset:0;opacity:0}
+.h1{font-size:92px;font-weight:900;line-height:1.25;letter-spacing:-2px}
+.h2{font-size:64px;font-weight:700;line-height:1.35;letter-spacing:-1px}
+.body{font-size:44px;font-weight:500;line-height:1.5;color:#C9D6E6}
+.mint{color:#2DD4BF}.red{color:#FF8A80}
+.glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.35}
+.card{background:rgba(255,255,255,.07);border:2px solid rgba(45,212,191,.35);border-radius:40px;padding:44px 52px}
+.phone{position:absolute;width:600px;height:1220px;border-radius:84px;background:#0b0f16;border:14px solid #27303d;box-shadow:0 40px 120px rgba(0,0,0,.6);overflow:hidden}
+.screen{position:absolute;inset:0;background:#F4F6F9;color:#141B24}
+.notif{position:absolute;left:24px;right:24px;background:#fff;border-radius:36px;padding:30px 30px 26px;box-shadow:0 16px 50px rgba(0,0,0,.25);color:#141B24}
+.btn{display:inline-block;border-radius:40px;padding:16px 0;font-size:28px;font-weight:700;text-align:center}
+.wave{position:absolute;border:10px solid #2DD4BF;border-radius:50%;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(45deg)}
+</style></head><body>
+<div class="glow" style="width:900px;height:900px;background:#2DD4BF;left:-300px;top:-200px"></div>
+<div class="glow" style="width:800px;height:800px;background:#3B82F6;right:-300px;bottom:-200px;opacity:.2"></div>
+
+<!-- S1: 문제 제기 -->
+<div class="scene" id="s1">
+  <div class="abs center h2" id="s1a" style="top:250px">출근길 지하철,<br>붐비는 사람들 사이</div>
+  <!-- 가방 -->
+  <svg class="abs" id="bag" viewBox="0 0 400 420" style="left:290px;top:760px;width:500px">
+    <path d="M110 120 C110 40 290 40 290 120" fill="none" stroke="#8B6B4A" stroke-width="22" stroke-linecap="round"/>
+    <rect x="30" y="110" width="340" height="300" rx="46" fill="#A07A52"/>
+    <rect x="30" y="110" width="340" height="70" rx="30" fill="#8B6B4A"/>
+    <rect x="175" y="165" width="50" height="40" rx="10" fill="#D9B98F"/>
+    <!-- 가방 속 폰 (반투명) -->
+    <rect id="bagphone" x="130" y="215" width="140" height="170" rx="22" fill="#0A1A33" stroke="#2DD4BF" stroke-width="5" opacity="0"/>
+  </svg>
+  <!-- 리더기 -->
+  <div class="abs" id="reader" style="width:260px;height:180px;border-radius:30px;background:#3A4556;border:6px solid #5B6B82;top:950px;left:1100px">
+    <div style="position:absolute;left:24px;top:24px;width:90px;height:56px;border-radius:12px;background:#1F2733"></div>
+    <div style="position:absolute;left:24px;bottom:22px;font-size:30px;font-weight:700;color:#9FB0C6">READER</div>
+  </div>
+  <div id="waves">
+    <div class="wave" style="width:120px;height:120px;left:610px;top:950px"></div>
+    <div class="wave" style="width:200px;height:200px;left:570px;top:910px"></div>
+    <div class="wave" style="width:280px;height:280px;left:530px;top:870px"></div>
+  </div>
+  <div class="abs center h1" id="s1b" style="top:1430px">가방 속 내 폰에<br><span class="mint">누군가 리더기를</span> 댄다면?</div>
+</div>
+
+<!-- S2 -->
+<div class="scene" id="s2">
+  <div class="abs center h1" style="top:700px">내가 <span class="red">꺼내지도 않았는데</span><br>NFC가 응답합니다</div>
+  <div class="abs center body" id="s2b" style="top:1060px">사용자는 알아채기 어렵습니다</div>
+</div>
+
+<!-- S3: 로고 -->
+<div class="scene" id="s3">
+  <svg class="abs" id="logo" viewBox="0 0 108 108" style="left:340px;top:560px;width:400px;height:400px">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12345E"/><stop offset="1" stop-color="#0A1A33"/></linearGradient>
+    <clipPath id="cl"><rect width="108" height="108" rx="26"/></clipPath></defs>
+    <g clip-path="url(#cl)"><rect width="108" height="108" fill="url(#bg)"/>
+    <path d="M54,21 L82,31 V52 C82,71 70,82.5 54,89 C38,82.5 26,71 26,52 V31 Z" fill="#2DD4BF"/>
+    <path d="M48.45,50.65 A8,8 0 0 1 48.45,61.35 M54.02,45.63 A15.5,15.5 0 0 1 54.02,66.37 M59.59,40.61 A23,23 0 0 1 59.59,71.39" fill="none" stroke="#0A1A33" stroke-width="4.4" stroke-linecap="round"/>
+    <circle cx="42" cy="56" r="3.4" fill="#0A1A33"/></g>
+    <rect width="108" height="108" rx="26" fill="none" stroke="rgba(45,212,191,.6)" stroke-width="1"/>
+  </svg>
+  <div class="abs center" id="s3t" style="top:1040px"><div class="h1" style="font-size:120px">NFC Guard</div>
+    <div class="h2 mint" style="margin-top:20px;font-size:56px">의도하지 않은 NFC 태그 알림</div></div>
+</div>
+
+<!-- S4: 원리 -->
+<div class="scene" id="s4">
+  <div class="abs center h2" style="top:200px">어떻게 알아낼까요?</div>
+  <div class="abs card" id="c1" style="left:90px;right:90px;top:420px">
+    <div class="h2" style="font-size:52px"><span class="mint">①</span> 태그 직전 2.5초의 움직임</div>
+    <div class="body" style="margin-top:12px">폰을 꺼내 리더기로 가져갔나요?</div>
+    <svg viewBox="0 0 800 140" style="width:100%;height:140px;margin-top:20px"><path id="sig" fill="none" stroke="#2DD4BF" stroke-width="7" stroke-linecap="round" d=""/></svg>
+  </div>
+  <div class="abs card" id="c2" style="left:90px;right:90px;top:900px">
+    <div class="h2" style="font-size:52px"><span class="mint">②</span> 근접·밝기 센서</div>
+    <div class="body" style="margin-top:12px">가려지고 어두우면 → 가방·주머니 속</div>
+  </div>
+  <div class="abs card" id="c3" style="left:90px;right:90px;top:1210px">
+    <div class="h2" style="font-size:52px"><span class="mint">③</span> 규칙 + AI로 판단</div>
+    <div class="body" style="margin-top:12px">내 태그 습관을 등록하면 오탐이 줄어요</div>
+  </div>
+</div>
+
+<!-- S5: 알림 -->
+<div class="scene" id="s5">
+  <div class="abs center h2" style="top:150px">의심되면 <span class="mint">알림 + 진동</span>으로<br>바로 알려드려요</div>
+  <div class="phone" id="ph5" style="left:240px;top:520px">
+    <div class="screen" style="background:linear-gradient(180deg,#1b2b44,#0e1a2e)">
+      <div style="position:absolute;top:24px;left:0;right:0;text-align:center;font-size:26px;color:#cfd8e3;font-weight:500">08:41</div>
+      <div class="notif" id="nt" style="top:80px">
+        <div style="display:flex;align-items:center;gap:12px;font-size:22px;color:#566273;font-weight:500">
+          <svg viewBox="0 0 24 24" width="28" height="28"><path fill="#C62828" d="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-2h2v2zM13,13h-2L11,7h2v6z"/></svg>NFC Guard · 지금</div>
+        <div style="font-size:30px;font-weight:700;margin-top:12px">본인 확인 안 된 NFC 접촉 감지</div>
+        <div style="font-size:24px;line-height:1.5;color:#3a4553;margin-top:8px">기기가 가방/주머니 안에 있는 상태에서 NFC 태그가 감지되었습니다. 카드사 거래내역을 확인하세요.</div>
+        <div style="display:flex;gap:14px;margin-top:20px">
+          <span class="btn" style="flex:1;border:2px solid #d5dbe3;color:#0E7C72">내가 태그함</span>
+          <span class="btn" style="flex:1;background:#C62828;color:#fff">내가 안 함</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="abs center body" id="vib" style="top:1780px;font-size:40px;color:#2DD4BF;font-weight:700">짧게 · 짧게 · 길게 — 화면을 안 봐도 알 수 있게</div>
+</div>
+
+<!-- S6: 기록 -->
+<div class="scene" id="s6">
+  <div class="abs center h2" style="top:150px">언제, 어디서 있었는지<br><span class="mint">기록으로 확인</span></div>
+  <div class="phone" id="ph6" style="left:240px;top:520px">
+    <div class="screen" style="padding:70px 30px">
+      <div style="font-size:34px;font-weight:900">최근 감지 기록</div>
+      <div id="row1" style="margin-top:26px;background:#fff;border-radius:28px;padding:28px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:28px">가방·주머니 속에서 태그됨</b></div>
+        <div style="font-size:23px;color:#566273;margin-top:8px">2026.11.20 08:41</div>
+        <div style="font-size:23px;color:#0E7C72;margin-top:6px;font-weight:700">📍 위치 ±25m · 08:41 측정 · 지도에서 보기</div>
+        <div style="font-size:22px;color:#566273;margin-top:10px">본인이 하지 않은 태그로 기록됨</div>
+      </div>
+      <div id="row2" style="margin-top:20px;background:#fff;border-radius:28px;padding:28px">
+        <b style="font-size:28px">의도가 불확실한 태그</b>
+        <div style="font-size:23px;color:#566273;margin-top:8px">2026.11.19 18:12</div>
+        <div style="font-size:23px;color:#566273;margin-top:6px">위치 기록 꺼짐</div>
+        <div style="font-size:22px;color:#566273;margin-top:10px">내가 한 태그로 확인됨</div>
+      </div>
+    </div>
+  </div>
+  <div class="abs center body" id="s6c" style="top:1780px;font-size:40px">위치는 <b class="mint">내 폰에만</b> 저장돼요</div>
+</div>
+
+<!-- S7: 개인정보·유의 -->
+<div class="scene" id="s7">
+  <div class="abs center h2" style="top:330px">안심하고 쓰도록</div>
+  <div class="abs card" id="p1" style="left:90px;right:90px;top:560px"><div class="h2" style="font-size:50px">✓ 데이터 제공은 선택</div><div class="body">동의하지 않아도 모든 감지가 동작해요</div></div>
+  <div class="abs card" id="p2" style="left:90px;right:90px;top:860px"><div class="h2" style="font-size:50px">✓ 위치는 서버로 안 보내요</div><div class="body">언제든 내 데이터 삭제 가능</div></div>
+  <div class="abs center body" id="p3" style="top:1260px;font-size:34px;color:#9FB0C6;padding:0 120px">결제를 막거나 취소하는 앱은 아니에요.<br>감지 범위는 기기·Android 버전에 따라 달라요.</div>
+</div>
+
+<!-- S8: 마무리 -->
+<div class="scene" id="s8">
+  <svg class="abs" viewBox="0 0 108 108" style="left:400px;top:640px;width:280px;height:280px">
+    <defs><linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12345E"/><stop offset="1" stop-color="#0A1A33"/></linearGradient>
+    <clipPath id="cl2"><rect width="108" height="108" rx="26"/></clipPath></defs>
+    <g clip-path="url(#cl2)"><rect width="108" height="108" fill="url(#bg2)"/>
+    <path d="M54,21 L82,31 V52 C82,71 70,82.5 54,89 C38,82.5 26,71 26,52 V31 Z" fill="#2DD4BF"/>
+    <path d="M48.45,50.65 A8,8 0 0 1 48.45,61.35 M54.02,45.63 A15.5,15.5 0 0 1 54.02,66.37 M59.59,40.61 A23,23 0 0 1 59.59,71.39" fill="none" stroke="#0A1A33" stroke-width="4.4" stroke-linecap="round"/>
+    <circle cx="42" cy="56" r="3.4" fill="#0A1A33"/></g>
+    <rect width="108" height="108" rx="26" fill="none" stroke="rgba(45,212,191,.6)" stroke-width="1"/>
+  </svg>
+  <div class="abs center" style="top:980px"><div class="h1" style="font-size:110px">NFC Guard</div>
+    <div class="h2" style="margin-top:24px;font-size:52px;color:#C9D6E6">내 폰의 NFC, 내가 알 수 있게</div>
+    <div id="cta" style="display:inline-block;margin-top:70px;padding:26px 60px;border-radius:60px;background:#2DD4BF;color:#00332E;font-size:44px;font-weight:900">Android 출시 준비 중</div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const out=x=>{x=clamp(x);return 1-Math.pow(1-x,3)};
+// 장면 구간 [시작, 끝] (초)
+const S={s1:[0,8],s2:[7.6,12.2],s3:[11.8,16.4],s4:[16,22.6],s5:[22.2,28.8],s6:[28.4,33.8],s7:[33.4,38.8],s8:[38.4,43]};
+const DUR=43;
+function sceneAlpha(id,t){const [a,b]=S[id];return clamp((t-a)/.45)*clamp((b-t)/.45)}
+function rise(el,t,t0,d=.7,dist=60){const p=out((t-t0)/d);el.style.opacity=p;el.style.transform=`translateY(${(1-p)*dist}px)`}
+function render(t){
+  for(const id in S){$(id).style.opacity=sceneAlpha(id,t)}
+  // S1
+  rise($('s1a'),t,.2);
+  const r=ease((t-1.6)/2.2); $('reader').style.left=(1100-r*420)+'px'; $('reader').style.transform=`rotate(${-8+r*8}deg)`;
+  $('bagphone').setAttribute('opacity', clamp((t-1.0)/1)*0.9);
+  const wOn=t>3.6&&t<8; [...$('waves').children].forEach((w,i)=>{const ph=((t-3.6)*1.6-i*.25)%1; w.style.opacity=wOn?clamp(1-Math.abs(ph-.5)*2)*1:0});
+  rise($('s1b'),t,4.4);
+  // S2
+  rise($('s2b'),t,9.2);
+  // S3 로고
+  const lp=out((t-12.2)/.9); $('logo').style.transform=`scale(${.6+.4*lp}) rotate(${(1-lp)*-12}deg)`; $('logo').style.opacity=lp;
+  rise($('s3t'),t,13.0);
+  // S4 카드 + 신호선
+  rise($('c1'),t,16.5); rise($('c2'),t,18.3); rise($('c3'),t,20.0);
+  let d='M0 70'; const prog=clamp((t-17)/2.2);
+  for(let x=0;x<=800*prog;x+=8){const pull=Math.exp(-Math.pow((x-560)/70,2))*55; const y=70+Math.sin(x/22+t*3)*10*(1-pull/55)-pull; d+=` L${x} ${y.toFixed(1)}`}
+  $('sig').setAttribute('d',d);
+  // S5 알림 + 진동 (짧게120 쉬고80 짧게120 쉬고80 길게500 ms)
+  const np=out((t-23.2)/.6); $('nt').style.transform=`translateY(${(1-np)*-420}px)`; $('nt').style.opacity=np;
+  const vt=(t-23.6)*1000; let shake=0;
+  if(vt>0){const seg=[[0,120],[200,320],[400,900]]; for(const [a,b] of seg){if(vt>=a&&vt<b){shake=Math.sin(vt/9)*10}}}
+  $('ph5').style.transform=`translateX(${shake}px)`;
+  rise($('vib'),t,24.6);
+  // S6
+  rise($('row1'),t,29.3); rise($('row2'),t,30.1); rise($('s6c'),t,31.2);
+  // S7
+  rise($('p1'),t,34.0); rise($('p2'),t,35.0); rise($('p3'),t,36.2);
+  // S8
+  const cp=out((t-40)/.6); $('cta').style.transform=`scale(${.85+.15*cp})`; $('cta').style.opacity=cp;
+}
+window.DUR=DUR; render(0);
+</script></body></html>

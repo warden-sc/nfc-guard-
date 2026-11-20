@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/nfc_background"
+    android:orientation="vertical"
+    android:padding="24dp"
+    tools:context=".OnboardingActivity">
+
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/onboarding_close_cd"
+        android:src="@drawable/ic_close"
+        app:tint="@color/nfc_on_surface" />
+
+    <ImageView
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:importantForAccessibility="no"
+        android:src="@mipmap/ic_launcher_round" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="@string/onboarding_title"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:textColor="@color/nfc_on_surface"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="@string/onboarding_desc"
+        android:textAppearance="@style/TextAppearance.NfcGuard.Body" />
+
+    <com.google.android.material.card.MaterialCardView
+        style="@style/Widget.NfcGuard.Card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/onboarding_step1"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="@color/nfc_on_surface" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/onboarding_step2"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="@color/nfc_on_surface" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/onboarding_step3"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="@color/nfc_on_surface" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/progressText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="@color/nfc_on_surface"
+        tools:text="2 / 6" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:max="6"
+        app:indicatorColor="@color/nfc_primary"
+        app:trackColor="@color/nfc_outline"
+        app:trackCornerRadius="4dp"
+        app:trackThickness="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tapButton"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/onboarding_button"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        app:cornerRadius="20dp" />
+</LinearLayout>

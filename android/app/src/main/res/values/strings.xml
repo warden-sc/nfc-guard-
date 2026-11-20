@@ -1,4 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NFC Guard</string>
+    <string name="hce_service_description">NFC Guard 의도하지 않은 태그 감지</string>
+    <string name="hce_aid_group_description">NFC Guard 필드 감지 (데모)</string>
+
+    <!-- 메인: 보호 상태 -->
+    <string name="status_on_title">보호 중</string>
+    <string name="status_off_title">보호 꺼짐</string>
+    <string name="status_on_desc">가방·주머니 속에서 내가 꺼내지 않았는데 NFC가 태그되면 바로 알림과 진동으로 알려드려요.</string>
+    <string name="status_off_desc">지금은 의도하지 않은 NFC 태그를 감시하지 않아요. 스위치를 켜면 보호가 시작돼요.</string>
+    <string name="status_switch_cd">보호 켜기/끄기</string>
+
+    <string name="level_advanced">감지 수준: 고급 · 리더기 접근을 결제 전에 감지할 수 있는 기기예요</string>
+    <string name="level_basic">감지 수준: 기본 · 이 기기는 일부 상황에서만 감지할 수 있어요</string>
+    <string name="level_nfc_off">NFC가 꺼져 있어요 · 태그 자체가 일어나지 않아요</string>
+    <string name="level_no_nfc">이 기기는 NFC를 지원하지 않아요</string>
+
+    <!-- 메인: 체크리스트 -->
+    <string name="checklist_title">보호가 잘 동작하려면</string>
+    <string name="check_notifications">알림 허용</string>
+    <string name="check_notifications_desc">의심 태그를 바로 알려드리려면 필요해요</string>
+    <string name="check_nfc">NFC 켜짐</string>
+    <string name="check_nfc_desc">NFC 설정이 꺼져 있으면 감지할 대상도 없어요</string>
+    <string name="check_battery">배터리 최적화 제외</string>
+    <string name="check_battery_desc">일부 기종은 백그라운드 감시를 강제로 멈춰요</string>
+    <string name="check_onboarding">내 태그 동작 등록</string>
+    <string name="check_onboarding_desc">평소 태그하는 동작을 알려주면 오탐이 줄어요</string>
+    <string name="check_onboarding_done">%1$d회 등록됨</string>
+    <string name="action_allow">허용</string>
+    <string name="action_open_settings">설정</string>
+    <string name="action_register">등록</string>
+    <string name="action_redo">다시 등록</string>
+
+    <!-- 메인: 감지 기록 -->
+    <string name="history_title">최근 감지 기록</string>
+    <string name="history_empty">아직 의심스러운 태그가 없어요.\n감지되면 여기에 기록돼요.</string>
+    <string name="reason_bag">가방·주머니 속에서 태그됨</string>
+    <string name="reason_no_gesture">꺼내는 동작 없이 태그됨</string>
+    <string name="reason_ambiguous">의도가 불확실한 태그</string>
+    <string name="reason_normal">정상 태그</string>
+    <string name="risk_percent">위험도 %1$d%%</string>
+    <string name="label_question">내가 한 태그인가요?</string>
+    <string name="label_mine">내가 태그함</string>
+    <string name="label_not_mine">내가 안 함</string>
+    <string name="label_confirmed_mine">내가 한 태그로 확인됨</string>
+    <string name="label_confirmed_not_mine">본인이 하지 않은 태그로 신고됨</string>
+    <string name="not_mine_dialog_title">거래내역을 확인해주세요</string>
+    <string name="not_mine_dialog_body">카드사·교통카드 앱에서 이 시각 전후의 결제 내역을 확인하고, 모르는 거래가 있으면 카드사 고객센터에 바로 신고하세요.</string>
+    <string name="action_ok">확인</string>
+
+    <!-- 위치 기록 (기기 안에만 저장) -->
+    <string name="location_off">위치 기록 꺼짐</string>
+    <string name="location_pending">위치 측정 중…</string>
+    <string name="location_no_permission">위치 권한 없음 · 위치를 기록하지 못했어요</string>
+    <string name="location_disabled">기기 위치 서비스 꺼짐 · 위치를 기록하지 못했어요</string>
+    <string name="location_unavailable">위치를 확보하지 못했어요 (실내·지하 등)</string>
+    <string name="location_accuracy">±%1$dm</string>
+    <string name="location_ok">위치 %1$s · %2$s 측정 · 지도에서 보기</string>
+    <string name="location_coarse">대략적 위치 %1$s · %2$s 측정 · 지도에서 보기</string>
+
+    <!-- 개인정보 -->
+    <string name="privacy_title">개인정보</string>
+    <string name="privacy_data_sharing">감지 정확도 개선에 데이터 제공</string>
+    <string name="privacy_data_sharing_desc">태그 직전 2.5초의 움직임 센서 값, 근접·밝기 상태, 내 응답을 익명 기기 ID로 서버에 보내요. 위치와 연락처 등은 보내지 않아요. 꺼도 감지와 알림은 그대로 동작해요.</string>
+    <string name="privacy_location">감지 기록에 위치 남기기</string>
+    <string name="privacy_location_desc">NFC 태그가 감지된 순간의 위치를 이 기기에만 저장해서, 예상하지 못한 장소의 기록을 확인할 수 있어요. 서버로 보내지 않아요.</string>
+    <string name="privacy_policy">개인정보처리방침</string>
+    <string name="delete_all_data">내 데이터 삭제</string>
+
+    <string name="consent_title">데이터 제공에 동의하시겠어요?</string>
+    <string name="consent_body">NFC Guard는 의도하지 않은 NFC 태그를 더 정확히 구분하도록 학습해요.
+
+동의하면 감지가 일어났을 때 태그 직전 2.5초의 움직임 센서 값, 근접·밝기·화면 상태, "내가 태그함/안 함" 응답을 익명 기기 ID와 함께 서버로 보내요. 이름·전화번호·위치·결제 정보는 보내지 않아요.
+
+동의하지 않아도 감지·알림·기록은 이 기기 안에서 그대로 동작하고, 설정에서 언제든 바꿀 수 있어요.</string>
+    <string name="consent_agree">동의</string>
+    <string name="consent_decline">동의 안 함</string>
+
+    <string name="withdraw_title">데이터 제공을 중단할까요?</string>
+    <string name="withdraw_body">앞으로 서버로 아무것도 보내지 않아요. 이미 보낸 데이터도 지금 삭제할 수 있어요.</string>
+    <string name="withdraw_and_delete">중단하고 서버 데이터 삭제</string>
+    <string name="withdraw_keep_server">중단만 하기</string>
+
+    <string name="delete_title">내 데이터를 삭제할까요?</string>
+    <string name="delete_body">서버에 보낸 감지 데이터·응답과 이 기기의 감지 기록(위치 포함)을 모두 삭제해요. 되돌릴 수 없어요.</string>
+    <string name="delete_confirm">삭제</string>
+    <string name="delete_done">데이터를 삭제했어요.</string>
+    <string name="delete_failed">서버 데이터를 삭제하지 못했어요. 네트워크를 확인하고 다시 시도해주세요.</string>
+    <string name="action_cancel">취소</string>
+    <string name="action_continue">계속</string>
+
+    <string name="location_disclosure_title">위치 기록 안내</string>
+    <string name="location_disclosure_body">NFC Guard는 NFC 태그가 감지된 순간에만 위치를 한 번 측정해서 감지 기록에 함께 저장해요. 앱을 닫아도 보호가 실행 중이면 측정해요.
+
+위치는 이 기기 안에만 저장되고 서버나 다른 곳으로 보내지 않아요. 이동 경로를 계속 추적하지 않아요. 설정에서 언제든 끌 수 있어요.</string>
+
+    <string name="model_active">AI 판정 모델 적용 중 (v%1$s)</string>
+    <string name="model_inactive">AI 모델 미적용 · 기본 판정 규칙으로 감시 중</string>
+
+    <!-- 온보딩 -->
+    <string name="onboarding_title">내 태그 동작 등록</string>
+    <string name="onboarding_desc">평소 결제할 때처럼 폰을 꺼내 리더기(또는 다른 폰 뒷면)에 대고, 바로 아래 버튼을 눌러주세요. 사람마다 태그하는 동작이 달라서, 등록하면 오탐이 줄어요.</string>
+    <string name="onboarding_step1">1. 폰을 주머니나 가방에서 꺼내요</string>
+    <string name="onboarding_step2">2. 리더기에 폰 뒷면을 대요</string>
+    <string name="onboarding_step3">3. 1~2초 안에 아래 버튼을 눌러요</string>
+    <string name="onboarding_progress">%1$d / %2$d</string>
+    <string name="onboarding_button">방금 태그했어요</string>
+    <string name="onboarding_done">등록 완료! 내 태그 동작을 기억했어요.</string>
+    <string name="onboarding_close_cd">닫기</string>
+
+    <!-- 알림 -->
+    <string name="notif_channel_alerts">NFC 이상감지</string>
+    <string name="notif_channel_monitor">NFC 보호 실행 중</string>
+    <string name="notif_monitor_title">NFC Guard 보호 중</string>
+    <string name="notif_monitor_text">의도하지 않은 NFC 태그를 감시하고 있어요.</string>
 </resources>

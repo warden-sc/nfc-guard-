@@ -2,13 +2,19 @@
 <!--
   주의: 실결제 AID(F0000000030001 등 실카드사 AID)를 여기 등록하면 안 됨.
   이 스캐폴딩은 "필드 감지" 로직 검증용 데모 AID만 사용한다.
-  프로덕션에서는 결제 AID를 건드리지 않고, 별도 메커니즘(리더 폴링 브로드캐스트 관찰)으로
-  전환하는 설계 검토가 필요하다 (문서 docs/ARCHITECTURE.md 참고).
+  프로덕션에서는 결제 AID를 건드리지 않고, 리더기 폴링 관찰(Android 15+ processPollingFrames)로
+  전환하는 설계 검토가 필요하다 (docs/ARCHITECTURE.md 참고).
 -->
 <host-apdu-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:description="NFC Guard field-detection demo"
+    android:description="@string/hce_service_description"
     android:requireDeviceUnlock="false">
-    <aid-group android:description="demo" android:category="other">
+    <aid-group android:description="@string/hce_aid_group_description" android:category="other">
         <aid-filter android:name="F04E464347554152D0" />
+        <!--
+          Android 15+: 폴링 루프 필터. 실기기에서 리더기별 폴링 패턴을 수집한 뒤
+          android:name 에 해당 패턴(hex)을 넣어 활성화. autoTransact="false"는
+          관찰만 하고 결제 트랜잭션을 가로채지 않겠다는 의미.
+          <polling-loop-filter android:name="XXXX" android:autoTransact="false" />
+        -->
     </aid-group>
 </host-apdu-service>
