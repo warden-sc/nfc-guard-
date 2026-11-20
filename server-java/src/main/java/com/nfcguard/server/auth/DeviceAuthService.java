@@ -1,8 +1,10 @@
 package com.nfcguard.server.auth;
 
 import com.nfcguard.server.model.Device;
+import com.nfcguard.server.repository.AnomalyEventRepository;
 import com.nfcguard.server.repository.DeviceRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -22,10 +24,12 @@ import java.util.UUID;
 public class DeviceAuthService {
 
     private final DeviceRepository repository;
+    private final AnomalyEventRepository eventRepository;
     private final SecureRandom random = new SecureRandom();
 
-    public DeviceAuthService(DeviceRepository repository) {
+    public DeviceAuthService(DeviceRepository repository, AnomalyEventRepository eventRepository) {
         this.repository = repository;
+        this.eventRepository = eventRepository;
     }
 
     public record Registration(String deviceToken, String apiKey) {}
@@ -37,6 +41,24 @@ public class DeviceAuthService {
         String apiKey = Base64.getUrlEncoder().withoutPadding().encodeToString(keyBytes);
         repository.save(new Device(deviceToken, sha256(apiKey), Instant.now()));
         return new Registration(deviceToken, apiKey);
+    }
+
+    /** 사용자 데이터 삭제 요청: 이 기기의 이벤트와 등록 정보를 모두 지운다. @return 삭제한 이벤트 수 */
+    @Transactional
+    public int deleteDeviceAndData(String deviceToken) {
+        int events = eventRepository.deleteAllByDeviceToken(deviceToken);
+        repository.findByDeviceToken(deviceToken).ifPresent(repository::delete);
+        return events;
+    }
+
+    /** 관리자: 통제 실험 수집용 테스트 휴대폰 지정/해제. @return 기기가 없으면 false */
+    @Transactional
+    public boolean setTestDevice(String deviceToken, boolean testDevice) {
+        return repository.findByDeviceToken(deviceToken).map(d -> {
+            d.setTestDevice(testDevice);
+            repository.save(d);
+            return true;
+        }).orElse(false);
     }
 
     /** 토큰/키가 맞으면 해당 기기 토큰 반환 */

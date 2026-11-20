@@ -7,12 +7,18 @@ import com.fasterxml.jackson.databind.JsonNode;
  * deviceToken은 본문이 아니라 인증 헤더에서 가져온다 (사칭 방지).
  */
 public class AnomalyEventRequest {
-    /** "field_detection"(실제 NFC 필드 감지) 또는 "onboarding"(사용자가 직접 태그한 정상 샘플) */
+    /** "field_detection"(실제 NFC 필드 감지), "onboarding"(사용자가 직접 태그한 정상 샘플),
+     *  "controlled_experiment"(테스트 휴대폰 통제 실험 - experimentIntentional 필수) */
     public String source = AnomalyEvent.SOURCE_FIELD_DETECTION;
     public double riskScore;
     public String reason;
     public int repeatCount;
     public long occurredAtEpochMs;
+
+    /** controlled_experiment 전용: 실험 조건상 의도한 태깅인지 (예: 가방 속 접촉 모사 = false) */
+    public Boolean experimentIntentional;
+    /** controlled_experiment 전용: 조건 메모 (주머니 위치, 가방 적재, 이동/정지 등) */
+    public String experimentCondition;
 
     // GestureMatcher 중간값 (휴리스틱 vs 모델 비교/분석용)
     public Double netDisplacement;

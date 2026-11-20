@@ -26,9 +26,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new DeviceAuthInterceptor(authService, maxRequestsPerHour))
-                .addPathPatterns("/api/v1/events/**")
+                .addPathPatterns("/api/v1/events/**", "/api/v1/devices/me")
                 .excludePathPatterns("/api/v1/events/dataset/**");
         registry.addInterceptor(new AdminKeyInterceptor(adminKey))
-                .addPathPatterns("/api/v1/events/dataset/**");
+                .addPathPatterns("/api/v1/events/dataset/**", "/api/v1/admin/**");
     }
 }

@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -24,12 +27,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(properties = {
         "nfcguard.admin.api-key=pg-admin",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
+        "spring.flyway.clean-disabled=false"
 })
 @ActiveProfiles("postgres")
 @AutoConfigureMockMvc
 @EnabledIfEnvironmentVariable(named = "NFCGUARD_TEST_PG_URL", matches = ".+")
 class PostgresIntegrationTest {
+
+    /** 테스트마다 깨끗한 스키마에서 Flyway 마이그레이션부터 실행 (마이그레이션 자체도 PostgreSQL로 검증) */
+    @TestConfiguration
+    static class CleanMigrate {
+        @Bean
+        FlywayMigrationStrategy cleanMigrate() {
+            return flyway -> {
+                flyway.clean();
+                flyway.migrate();
+            };
+        }
+    }
 
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry r) {

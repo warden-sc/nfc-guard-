@@ -32,6 +32,8 @@ jobs:
         run: ./mvnw -B test
         env:
           NFCGUARD_TEST_PG_URL: jdbc:postgresql://localhost:5432/nfcguard
+      - name: Docker image build
+        run: docker build -t nfcguard-server .
 
   ml-python:
     runs-on: ubuntu-latest

@@ -34,6 +34,21 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- 스키마 마이그레이션 (db/migration/{vendor}) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <!-- Play Integrity 토큰 검증용 서비스 계정 인증 (nfcguard.integrity.mode=google) -->
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.23.0</version>
+        </dependency>
         <!-- 상용 DB: postgres 프로필에서 사용 (application-postgres.properties) -->
         <dependency>
             <groupId>org.postgresql</groupId>

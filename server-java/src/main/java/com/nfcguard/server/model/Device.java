@@ -23,6 +23,10 @@ public class Device {
 
     private Instant registeredAt;
 
+    /** 통제 실험 수집용 테스트 휴대폰 (관리자만 지정 가능) */
+    @Column(nullable = false)
+    private boolean testDevice;
+
     protected Device() {}
 
     public Device(String deviceToken, String apiKeyHash, Instant registeredAt) {
@@ -35,4 +39,6 @@ public class Device {
     public String getDeviceToken() { return deviceToken; }
     public String getApiKeyHash() { return apiKeyHash; }
     public Instant getRegisteredAt() { return registeredAt; }
+    public boolean isTestDevice() { return testDevice; }
+    public void setTestDevice(boolean testDevice) { this.testDevice = testDevice; }
 }
