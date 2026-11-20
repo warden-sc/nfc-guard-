@@ -99,6 +99,13 @@ class DeviceLifecycleApiTest {
     }
 
     @Test
+    void privacyPolicyPageIsPublic() throws Exception {
+        String html = mvc.perform(get("/privacy.html")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(html.contains("개인정보처리방침"));
+    }
+
+    @Test
     void retentionJobRunsWithoutDeletingFreshEvents() throws Exception {
         postEvent(register(), "{\"riskScore\":0.8,\"occurredAtEpochMs\":1}").andExpect(status().isOk());
         long before = events.count();
