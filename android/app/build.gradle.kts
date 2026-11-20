@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.nfcguard.app"
-    compileSdk = 35 // processPollingFrames / Observe Mode (API 35) 컴파일용. targetSdk는 동작 변경 검토 후 올릴 것
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.nfcguard.app"
         minSdk = 26   // HCE + LINEAR_ACCELERATION 안정 지원 기준
-        targetSdk = 34
+        targetSdk = 36 // Google Play: 2026-08-31부터 신규 앱/업데이트는 API 36 타깃 필수
         versionCode = 1
         versionName = "0.1-scaffold"
         // server-java 주소. 기본값은 에뮬레이터 -> PC 로컬 서버(10.0.2.2).
@@ -45,6 +45,7 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.activity:activity-ktx:1.9.3") // enableEdgeToEdge
     implementation("com.google.android.material:material:1.12.0")
     implementation("org.tensorflow:tensorflow-lite:2.16.1")
 

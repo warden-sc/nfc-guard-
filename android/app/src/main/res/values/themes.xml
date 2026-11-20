@@ -13,9 +13,6 @@
         <item name="colorOnSurfaceVariant">@color/nfc_on_surface_variant</item>
         <item name="colorOutline">@color/nfc_outline</item>
         <item name="colorError">@color/nfc_danger</item>
-        <item name="android:statusBarColor">@color/nfc_background</item>
-        <item name="android:navigationBarColor">@color/nfc_background</item>
-        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
     </style>
 
     <style name="Widget.NfcGuard.Card" parent="Widget.Material3.CardView.Elevated">

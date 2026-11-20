@@ -2,6 +2,7 @@ package com.nfcguard.app
 
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.nfcguard.app.databinding.ActivityOnboardingBinding
 
@@ -17,9 +18,11 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var motionBuffer: MotionBuffer
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         motionBuffer = (application as NfcGuardApp).motionBuffer
         motionBuffer.start() // 보호가 꺼져 있어도 등록 중에는 센서가 필요
 
