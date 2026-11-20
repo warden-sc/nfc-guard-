@@ -24,11 +24,7 @@ class MotionForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val notification = buildOngoingNotification()
-        val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        } else 0
-        ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, type)
+        promote(allowLocation = false) // 5초 안에 startForeground 필수. 위치 타입은 onStartCommand에서 판단
 
         val app = application as NfcGuardApp
         app.motionBuffer.start()
@@ -45,7 +41,35 @@ class MotionForegroundService : Service() {
         }
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // 위치 기록이 켜져 있고 권한이 있으면 location 타입을 함께 지정해야 백그라운드에서 위치를 측정할 수 있다.
+        // Android 14+는 백그라운드(부팅 직후 등)에서 location 타입 FGS를 시작할 수 없으므로 부팅 시작은 제외 -
+        // 이후 사용자가 앱을 열면 MainActivity가 다시 start()를 호출해 위치 타입이 붙는다.
+        val fromBoot = intent?.getBooleanExtra(EXTRA_FROM_BOOT, false) == true
+        val wantLocation = !fromBoot && PrivacySettings.locationLogEnabled(this) && LocationLogger.hasPermission(this)
+        promote(wantLocation)
+        UploadQueue.flushAsync(this)
+        return START_STICKY
+    }
+
+    private fun promote(allowLocation: Boolean) {
+        val notification = buildOngoingNotification()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val type = if (allowLocation && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+            } else 0
+            ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, type)
+            return
+        }
+        val base = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+        try {
+            val type = if (allowLocation) base or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else base
+            ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, type)
+        } catch (e: SecurityException) {
+            // 위치 권한이 회수됐거나 시작 조건을 못 맞춘 경우: 감지는 계속, 위치만 측정 불가(no_permission 등으로 기록)
+            ServiceCompat.startForeground(this, ONGOING_NOTIF_ID, notification, base)
+        }
+    }
 
     override fun onDestroy() {
         wakeLock?.release()
@@ -81,9 +105,13 @@ class MotionForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "nfcguard_monitor"
         private const val ONGOING_NOTIF_ID = 1000
+        private const val EXTRA_FROM_BOOT = "fromBoot"
 
-        fun start(context: Context) {
-            ContextCompat.startForegroundService(context, Intent(context, MotionForegroundService::class.java))
+        fun start(context: Context, fromBoot: Boolean = false) {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, MotionForegroundService::class.java).putExtra(EXTRA_FROM_BOOT, fromBoot)
+            )
         }
 
         fun stop(context: Context) {

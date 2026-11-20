@@ -10,6 +10,11 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- 감지 기록 위치 (사용자가 켠 경우만, 앱 사용 중 권한 + location 타입 FGS. 백그라운드 위치 권한은 쓰지 않음) -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
     <uses-feature android:name="android.hardware.nfc.hce" android:required="true" />
 
@@ -35,7 +40,7 @@
         <service
             android:name=".MotionForegroundService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse|location">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="NFC 태그 순간 직전의 기기 움직임을 상시 버퍼링하여 사용자가 의도하지 않은 NFC 태그(가방/주머니 속 스키밍)를 감지" />

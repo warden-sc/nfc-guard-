@@ -51,6 +51,18 @@
         android:textAppearance="@style/TextAppearance.NfcGuard.Body"
         tools:text="2026.10.24 08:41" />
 
+    <!-- 위치 기록 (기기 안에만 저장). 좌표가 있으면 눌러서 지도 앱으로 -->
+    <TextView
+        android:id="@+id/eventLocation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="2dp"
+        android:background="?attr/selectableItemBackground"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="@color/nfc_on_surface_variant"
+        tools:text="위치 ±25m · 08:41 측정 · 지도에서 보기" />
+
     <!-- 라벨 미확정이면 질문 + 버튼, 확정되면 결과 문구 -->
     <TextView
         android:id="@+id/eventLabelState"

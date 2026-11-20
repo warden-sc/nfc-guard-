@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
+import android.net.Uri
 import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
@@ -44,6 +45,14 @@ class MainActivity : AppCompatActivity() {
             refresh()
         }
 
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            val granted = result.values.any { it }
+            PrivacySettings.setLocationLogEnabled(this, granted)
+            if (granted) restartProtectionService()
+            refresh()
+        }
+
     // 감지 기록/온보딩 baseline이 바뀌면(알림 버튼으로 라벨링 등) 화면 갱신
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
 
@@ -61,6 +70,7 @@ class MainActivity : AppCompatActivity() {
             refresh()
         }
 
+        askConsentIfNeeded()
         if (!hasNotificationPermission()) requestNotificationPermission()
         if (ProtectionSettings.isEnabled(this)) MotionForegroundService.start(this)
         logNfcCapabilities()
@@ -71,6 +81,7 @@ class MainActivity : AppCompatActivity() {
         EventLogStore.prefs(this).registerOnSharedPreferenceChangeListener(prefsListener)
         GestureBaselineStore.prefs(this).registerOnSharedPreferenceChangeListener(prefsListener)
         refresh() // 설정 화면(NFC/배터리/알림)에서 돌아왔을 때 체크리스트 반영
+        UploadQueue.flushAsync(this)
     }
 
     override fun onPause() {
@@ -83,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         renderStatus()
         renderChecklist()
         renderHistory()
+        renderPrivacy()
         val model = ModelUpdater.current
         binding.modelStatus.text = if (model != null) {
             getString(R.string.model_active, model.spec.version.toString())
@@ -180,41 +192,177 @@ class MainActivity : AppCompatActivity() {
         item.eventRisk.text = getString(R.string.risk_percent, (entry.riskScore * 100).toInt())
         item.eventTime.text = timeFormat.format(Date(entry.occurredAtMs))
 
-        val canLabel = entry.label == null && entry.eventId != null
-        item.eventLabelButtons.visibility = if (canLabel) View.VISIBLE else View.GONE
+        item.eventLocation.text = locationText(entry.location)
+        val loc = entry.location
+        if (loc?.latitude != null && loc.longitude != null) {
+            item.eventLocation.setOnClickListener { openMap(loc.latitude, loc.longitude) }
+        } else {
+            item.eventLocation.setOnClickListener(null)
+        }
+
+        // 응답은 기기에 바로 저장 (서버 반영은 동의한 경우 UploadQueue가 처리)
+        item.eventLabelButtons.visibility = if (entry.label == null) View.VISIBLE else View.GONE
         item.eventLabelState.setText(
             when {
                 entry.label == true -> R.string.label_confirmed_mine
                 entry.label == false -> R.string.label_confirmed_not_mine
-                entry.eventId == null -> R.string.label_pending_upload
                 else -> R.string.label_question
             }
         )
-        val eventId = entry.eventId ?: return
-        item.eventMine.setOnClickListener { submitLabel(item, eventId, wasIntentional = true) }
-        item.eventNotMine.setOnClickListener { submitLabel(item, eventId, wasIntentional = false) }
+        item.eventMine.setOnClickListener { recordLabel(entry.localId, wasIntentional = true) }
+        item.eventNotMine.setOnClickListener { recordLabel(entry.localId, wasIntentional = false) }
     }
 
-    private fun submitLabel(item: ItemEventBinding, eventId: Long, wasIntentional: Boolean) {
-        item.eventMine.isEnabled = false
-        item.eventNotMine.isEnabled = false
-        LabelActionReceiver.submitAsync(this, eventId, wasIntentional) { ok ->
-            if (isFinishing || isDestroyed) return@submitAsync
-            if (!ok) {
-                item.eventMine.isEnabled = true
-                item.eventNotMine.isEnabled = true
-                Toast.makeText(this, R.string.label_send_failed, Toast.LENGTH_SHORT).show()
-                return@submitAsync
-            }
-            // 성공 시 EventLogStore 변경 -> prefsListener가 목록을 다시 그림
-            if (!wasIntentional) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.not_mine_dialog_title)
-                    .setMessage(R.string.not_mine_dialog_body)
-                    .setPositiveButton(R.string.action_ok, null)
-                    .show()
+    private fun recordLabel(localId: String, wasIntentional: Boolean) {
+        LabelActionReceiver.recordLabel(this, localId, wasIntentional) // -> prefsListener가 목록 갱신
+        if (!wasIntentional) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.not_mine_dialog_title)
+                .setMessage(R.string.not_mine_dialog_body)
+                .setPositiveButton(R.string.action_ok, null)
+                .show()
+        }
+    }
+
+    /** 위치가 없으면 없음으로 표시하고, 대략적/측정 실패 상태를 구분한다 (PROJECT_SCOPE 5절) */
+    private fun locationText(loc: EventLogStore.LocationRecord?): String {
+        val s = EventLogStore.LocationStatus
+        if (loc == null) return getString(R.string.location_off)
+        return when (loc.status) {
+            s.OFF -> getString(R.string.location_off)
+            s.PENDING -> getString(R.string.location_pending)
+            s.NO_PERMISSION -> getString(R.string.location_no_permission)
+            s.LOCATION_DISABLED -> getString(R.string.location_disabled)
+            s.UNAVAILABLE -> getString(R.string.location_unavailable)
+            else -> {
+                val acc = loc.accuracyMeters?.let { getString(R.string.location_accuracy, it.toInt()) } ?: ""
+                val measured = loc.measuredAtMs?.let { timeFormat.format(Date(it)) } ?: "-"
+                val key = if (loc.status == s.COARSE) R.string.location_coarse else R.string.location_ok
+                getString(key, acc, measured)
             }
         }
+    }
+
+    private fun openMap(lat: Double, lon: Double) {
+        val uri = Uri.parse("geo:$lat,$lon?q=$lat,$lon")
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+    }
+
+    // ---- 개인정보: 데이터 제공 동의, 위치 기록, 처리방침, 데이터 삭제 ----
+
+    private fun renderPrivacy() {
+        val consent = PrivacySettings.canUpload(this)
+        binding.dataSharingSwitch.setOnCheckedChangeListener(null)
+        binding.dataSharingSwitch.isChecked = consent
+        binding.dataSharingSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked) {
+                PrivacySettings.setDataSharingConsent(this, true)
+                UploadQueue.flushAsync(this)
+                refresh()
+            } else {
+                confirmWithdrawConsent()
+            }
+        }
+
+        val locationOn = PrivacySettings.locationLogEnabled(this) && LocationLogger.hasPermission(this)
+        binding.locationSwitch.setOnCheckedChangeListener(null)
+        binding.locationSwitch.isChecked = locationOn
+        binding.locationSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked) showLocationDisclosure() else {
+                PrivacySettings.setLocationLogEnabled(this, false)
+                restartProtectionService()
+                refresh()
+            }
+        }
+        binding.privacyPolicyButton.setOnClickListener {
+            runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRIVACY_POLICY_URL))) }
+        }
+        binding.deleteDataButton.setOnClickListener { confirmDeleteAllData() }
+    }
+
+    /** 최초 실행 시 한 번: 서버로 무엇을 보내는지 알리고 선택받는다. 거절해도 감지·알림은 동작 */
+    private fun askConsentIfNeeded() {
+        if (PrivacySettings.dataSharingConsent(this) != null) return
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.consent_title)
+            .setMessage(R.string.consent_body)
+            .setCancelable(false)
+            .setPositiveButton(R.string.consent_agree) { _, _ ->
+                PrivacySettings.setDataSharingConsent(this, true)
+                refresh()
+            }
+            .setNegativeButton(R.string.consent_decline) { _, _ ->
+                PrivacySettings.setDataSharingConsent(this, false)
+                refresh()
+            }
+            .setNeutralButton(R.string.privacy_policy) { _, _ ->
+                // 처리방침을 본 뒤 다시 묻도록 아직 선택하지 않은 상태로 둔다
+                runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.PRIVACY_POLICY_URL))) }
+            }
+            .show()
+    }
+
+    private fun confirmWithdrawConsent() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.withdraw_title)
+            .setMessage(R.string.withdraw_body)
+            .setPositiveButton(R.string.withdraw_and_delete) { _, _ ->
+                PrivacySettings.setDataSharingConsent(this, false)
+                UploadQueue.clearPendingAsync(this)
+                deleteServerData(alsoLocal = false)
+            }
+            .setNegativeButton(R.string.withdraw_keep_server) { _, _ ->
+                PrivacySettings.setDataSharingConsent(this, false)
+                UploadQueue.clearPendingAsync(this)
+                refresh()
+            }
+            .setOnCancelListener { refresh() }
+            .show()
+    }
+
+    private fun confirmDeleteAllData() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.delete_title)
+            .setMessage(R.string.delete_body)
+            .setPositiveButton(R.string.delete_confirm) { _, _ -> deleteServerData(alsoLocal = true) }
+            .setNegativeButton(R.string.action_cancel, null)
+            .show()
+    }
+
+    private fun deleteServerData(alsoLocal: Boolean) {
+        val app = applicationContext
+        Thread {
+            val ok = BackendClient.deleteMyServerData(app)
+            if (ok && alsoLocal) {
+                EventLogStore.clear(app)
+                UploadQueue.clearPendingAsync(app)
+            }
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                Toast.makeText(this, if (ok) R.string.delete_done else R.string.delete_failed, Toast.LENGTH_LONG).show()
+                refresh()
+            }
+        }.start()
+    }
+
+    /** Play 정책: 위치 권한 요청 전에 무엇을 왜 수집하는지 앱 안에서 먼저 알린다 */
+    private fun showLocationDisclosure() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.location_disclosure_title)
+            .setMessage(R.string.location_disclosure_body)
+            .setPositiveButton(R.string.action_continue) { _, _ ->
+                locationPermissionLauncher.launch(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                )
+            }
+            .setNegativeButton(R.string.action_cancel) { _, _ -> refresh() }
+            .setOnCancelListener { refresh() }
+            .show()
+    }
+
+    /** 위치 기록 설정이 바뀌면 Foreground Service를 다시 시작해 location 타입을 붙이거나 뗀다 */
+    private fun restartProtectionService() {
+        if (ProtectionSettings.isEnabled(this)) MotionForegroundService.start(this)
     }
 
     private fun hasNotificationPermission(): Boolean {

@@ -16,15 +16,15 @@ object NotificationHelper {
     fun newNotificationId(): Int = nextNotificationId.getAndIncrement()
 
     /**
-     * 의심 태그 알림. 감지 즉시 eventId 없이 한 번 띄우고,
-     * 서버 업로드가 끝나 eventId를 받으면 같은 notificationId로 다시 호출해 라벨 버튼을 붙인다.
+     * 의심 태그 알림 + "내가 태그함 / 내가 안 함" 응답 버튼.
+     * 응답은 기기 감지 기록(localId)에 저장되므로 서버 업로드·동의 여부와 무관하게 바로 붙인다.
      */
     fun notifySuspiciousActivity(
         context: Context,
         notificationId: Int,
         reason: String,
         repeatCount: Int,
-        eventId: Long? = null
+        localId: String
     ) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (!nm.areNotificationsEnabled()) return // POST_NOTIFICATIONS 미허용 시 진동(HapticAlert)만 전달됨
@@ -53,13 +53,10 @@ object NotificationHelper {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOnlyAlertOnce(true) // 버튼 붙이려고 갱신할 때 다시 울리지 않게
             .setAutoCancel(true)
 
-        if (eventId != null) {
-            builder.addAction(0, context.getString(R.string.label_mine), labelIntent(context, notificationId, eventId, wasIntentional = true))
-            builder.addAction(0, context.getString(R.string.label_not_mine), labelIntent(context, notificationId, eventId, wasIntentional = false))
-        }
+        builder.addAction(0, context.getString(R.string.label_mine), labelIntent(context, notificationId, localId, wasIntentional = true))
+        builder.addAction(0, context.getString(R.string.label_not_mine), labelIntent(context, notificationId, localId, wasIntentional = false))
         nm.notify(notificationId, builder.build())
     }
 
@@ -70,10 +67,10 @@ object NotificationHelper {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
-    private fun labelIntent(context: Context, notificationId: Int, eventId: Long, wasIntentional: Boolean): PendingIntent {
+    private fun labelIntent(context: Context, notificationId: Int, localId: String, wasIntentional: Boolean): PendingIntent {
         val intent = Intent(context, LabelActionReceiver::class.java).apply {
             action = LabelActionReceiver.ACTION_LABEL
-            putExtra(LabelActionReceiver.EXTRA_EVENT_ID, eventId)
+            putExtra(LabelActionReceiver.EXTRA_LOCAL_ID, localId)
             putExtra(LabelActionReceiver.EXTRA_WAS_INTENTIONAL, wasIntentional)
             putExtra(LabelActionReceiver.EXTRA_NOTIFICATION_ID, notificationId)
         }
