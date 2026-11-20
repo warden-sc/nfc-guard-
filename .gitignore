@@ -24,3 +24,7 @@ ml-python/keys/
 
 # 사용자가 받은 adb (tools/local/connect-phone 이 사용)
 tools/local/platform-tools/
+
+# 소개 영상 렌더링 중간 산출물
+docs/media/promo-source/frames/
+docs/media/promo-source/sfx.wav
