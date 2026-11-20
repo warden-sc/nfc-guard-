@@ -105,6 +105,20 @@ targetSdk 35+는 화면이 시스템 바 아래까지 그려지므로 새 화면
 
 ---
 
+## PC에서 바로 실행하기 (IDE 없이)
+
+`tools/local/` 스크립트로 명령어를 직접 입력하지 않고 실행할 수 있다. Windows는 `.bat`(더블클릭), Mac/Linux는 `.sh`.
+필요한 것: **JDK 17**, 폰 연결 시 **adb**([Platform-Tools](https://developer.android.com/tools/releases/platform-tools)를 `tools/local/platform-tools/`에 압축 해제하거나 PATH에 추가). Android Studio·Android SDK는 필요 없다.
+
+| 순서 | 스크립트 | 하는 일 |
+|---|---|---|
+| 1 | `run-server` | JDK 확인 후 서버 실행. 데이터는 `server-java/data/`에 저장되어 껐다 켜도 유지 |
+| 2 | `connect-phone` | 폰 연결 확인 → `adb reverse tcp:8080 tcp:8080`. APK 경로를 주면(Windows는 APK를 아이콘에 끌어다 놓기) 기존 앱 삭제 후 설치 |
+| 3 | `show-data` | 서버에 쌓인 라벨 데이터 건수를 출처별로 표시 |
+
+연결 확인: 앱에서 데이터 제공 **동의** → "내 태그 동작 등록" 6회 → `show-data`에 `onboarding` 6건.
+PC를 끄면 서버도 꺼지지만 앱의 감지·알림·기록은 계속 동작하고, 그동안의 전송은 앱이 저장했다가 서버가 다시 켜지면 보낸다.
+
 ## 2. 백엔드 서버 — IntelliJ IDEA
 
 ### 요구 버전

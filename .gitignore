@@ -21,3 +21,6 @@ ml-python/data/
 # 모델 서명 개인키 (절대 커밋 금지)
 ml-python/keys/
 *.pem
+
+# 사용자가 받은 adb (tools/local/connect-phone 이 사용)
+tools/local/platform-tools/
