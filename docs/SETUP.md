@@ -13,15 +13,16 @@
 ### 요구 버전
 | 항목 | 버전 | 설정 위치 |
 |---|---|---|
-| Android Studio | Ladybug(2024.2) 이상 권장 | AGP 8.6 지원 버전 |
+| Android Studio | Meerkat(2024.3) 이상 권장 | AGP 8.10 지원 버전 |
 | JDK | 17 이상 (Android Studio 내장 JBR 사용 권장) | Settings > Build Tools > Gradle > Gradle JDK |
-| Gradle | 8.9 (Wrapper 고정) | `android/gradle/wrapper/gradle-wrapper.properties` |
-| Android Gradle Plugin | 8.6.1 | `android/build.gradle.kts` |
+| Gradle | 8.11.1 (Wrapper 고정) | `android/gradle/wrapper/gradle-wrapper.properties` |
+| Android Gradle Plugin | 8.10.1 | `android/build.gradle.kts` |
 | Kotlin | 1.9.24 | `android/build.gradle.kts` |
-| compileSdk / targetSdk / minSdk | 35 / 34 / 26 | `android/app/build.gradle.kts` |
+| compileSdk / targetSdk / minSdk | 36 / 36 / 26 | `android/app/build.gradle.kts` |
 
-SDK Manager에서 **Android SDK Platform 35**와 **Build-Tools 35.x**를 설치한다.
-compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파일하기 위해 필요하다.
+SDK Manager에서 **Android SDK Platform 36**을 설치한다.
+targetSdk 36은 Google Play 요구사항(2026-08-31부터 신규 앱·업데이트)이고, Android 15의 `processPollingFrames()`(Observe Mode)도 이 SDK로 컴파일된다.
+targetSdk 35+는 화면이 시스템 바 아래까지 그려지므로 새 화면을 만들 때 `applySystemBarInsets()`를 적용한다.
 
 ### 임포트
 1. Android Studio > **Open** > `nfc-guard-/android` 폴더 선택 (저장소 루트 아님)
@@ -29,7 +30,7 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
 3. Sync 실패 시 확인할 것
    - `android.useAndroidX=true`가 `android/gradle.properties`에 있는지 (없으면 AndroidX 의존성 오류)
    - Gradle JDK가 17 이상인지
-   - SDK Platform 35가 설치되어 있는지
+   - SDK Platform 36이 설치되어 있는지
 4. 단위 테스트: `app/src/test` 우클릭 > Run Tests (`GestureMatcherTest`, `GestureModelTest` — 기기 불필요)
 
 ### 서버 주소 (`BuildConfig.BACKEND_URL`)
@@ -38,6 +39,19 @@ compileSdk 35는 Android 15의 `processPollingFrames()`(Observe Mode)를 컴파�
 | 에뮬레이터 → PC의 로컬 서버 | 기본값 `http://10.0.2.2:8080` 그대로 |
 | 실기기(USB) → PC의 로컬 서버 | `adb reverse tcp:8080 tcp:8080` 실행 후 `~/.gradle/gradle.properties`에 `nfcguard.backendUrl=http://localhost:8080` |
 | 실서버 | `nfcguard.backendUrl=https://...` (평문 HTTP는 10.0.2.2/localhost만 허용됨) |
+
+### 빌드 설정값 (Gradle 속성)
+저장소에 커밋하지 않고 `~/.gradle/gradle.properties` 또는 `-P옵션`으로 넘긴다.
+
+| 속성 | 용도 | 기본값 |
+|---|---|---|
+| `nfcguard.backendUrl` | 서버 주소 | `http://10.0.2.2:8080` |
+| `nfcguard.privacyPolicyUrl` | 앱의 개인정보처리방침 링크 | `{backendUrl}/privacy.html` |
+| `nfcguard.cloudProjectNumber` | Play Integrity용 Google Cloud 프로젝트 번호 | 0 (지정 안 함) |
+| `nfcguard.versionCode` / `nfcguard.versionName` | 스토어 업로드 버전 (업로드마다 versionCode 증가) | 1 / 0.1.0 |
+| `nfcguard.signing.storeFile`, `.storePassword`, `.keyAlias`, `.keyPassword` | 릴리스 업로드 키 서명 | 없으면 서명 안 된 번들 |
+
+릴리스 번들: `./gradlew :app:bundleRelease` (R8 축소·난독화 적용). 출시 절차는 [출시 체크리스트](RELEASE_CHECKLIST.md).
 
 ### 에뮬레이터로 되는 것 / 안 되는 것
 | 기능 | 에뮬레이터 | 이유 |
@@ -120,6 +134,8 @@ NFCGUARD_ADMIN_API_KEY=dev-admin ./mvnw spring-boot:run
 ### 동작 확인 (curl)
 ```bash
 # 1) 기기 등록 -> deviceToken, apiKey
+#    (nfcguard.integrity.mode=google 이면 GET /api/v1/devices/nonce 로 받은 nonce와 Play Integrity 토큰이 필요해서
+#     curl로는 등록할 수 없다 - 기본값 off 에서만 아래처럼 등록 가능)
 curl -s -X POST localhost:8080/api/v1/devices/register
 
 # 2) 이벤트 수집
@@ -135,14 +151,37 @@ curl -s -X POST localhost:8080/api/v1/events \
 curl -s -X POST "localhost:8080/api/v1/events/1/confirm?wasIntentional=false" \
   -H "X-Device-Token: <deviceToken>" -H "Authorization: Bearer <apiKey>"
 
-# 4) 학습용 JSONL export
+# 4) 학습용 JSONL export (label_source: user_response / onboarding / controlled_experiment)
 curl -s "localhost:8080/api/v1/events/dataset/export?afterId=0" -H "X-Admin-Key: dev-admin"
+
+# 5) 통제 실험용 테스트 휴대폰 지정 -> 그 기기만 source=controlled_experiment 로 라벨 포함 수집 가능
+curl -s -X PUT "localhost:8080/api/v1/admin/devices/<deviceToken>/test-device?enabled=true" -H "X-Admin-Key: dev-admin"
+
+# 6) 내 데이터 삭제 (앱의 "내 데이터 삭제"와 같음)
+curl -s -X DELETE localhost:8080/api/v1/devices/me \
+  -H "X-Device-Token: <deviceToken>" -H "Authorization: Bearer <apiKey>"
 ```
+
+개인정보처리방침 페이지: `http://localhost:8080/privacy.html` (`src/main/resources/static/privacy.html`)
+
+### 서버 설정값 (환경변수)
+| 환경변수 | 용도 |
+|---|---|
+| `NFCGUARD_ADMIN_API_KEY` | export·관리자 API 키 (없으면 해당 API는 항상 401) |
+| `SPRING_PROFILES_ACTIVE=postgres`, `NFCGUARD_DB_URL/USER/PASSWORD` | PostgreSQL 사용 |
+| `NFCGUARD_INTEGRITY_MODE` | `off`(기본) / `google` - Play Integrity로 기기 등록 검증 |
+| `GOOGLE_APPLICATION_CREDENTIALS` | `google` 모드의 서비스 계정 키 파일 경로 |
+| `NFCGUARD_NONCE_SECRET` | 서버를 여러 대 띄울 때 nonce 서명 키 공유 (1대면 생략 가능) |
+| `nfcguard.retention.days` (properties) | 이벤트 보유 기간, 기본 365일 - 처리방침과 일치시킬 것 |
+
+Docker: `docker build -t nfcguard-server server-java` → `docker run -p 8080:8080 -e ... nfcguard-server`
 
 ### 데이터베이스
 **기본: H2 파일 DB** (설정 없음)
 - `application.properties`: `jdbc:h2:file:./data/nfcguard` → 실행 위치 기준 `data/nfcguard.mv.db` 생성 (.gitignore 처리됨)
-- 스키마는 `ddl-auto=update`로 엔티티에서 자동 생성
+- 스키마는 Flyway 마이그레이션(`src/main/resources/db/migration/{h2,postgresql}`)이 만들고, Hibernate는 `validate`만 한다.
+  예전 `ddl-auto=update`로 만든 `./data` 개발 DB가 있으면 지우고 다시 실행한다.
+- 엔티티를 바꾸면 두 DB용 `V{n}__*.sql`을 함께 추가한다 (안 하면 기동 시 validate 실패).
 
 **PostgreSQL 전환** (`postgres` 프로필)
 1. DB 띄우기
@@ -164,7 +203,6 @@ curl -s "localhost:8080/api/v1/events/dataset/export?afterId=0" -H "X-Admin-Key:
 - 센서 시계열 컬럼은 `@Lob`을 쓰면 PostgreSQL에서 `oid`(Large Object)로 매핑되어
   조회 시 `Unable to access lob stream` 오류가 난다. 그래서 `@JdbcTypeCode(SqlTypes.LONG32VARCHAR)`로
   PostgreSQL `text` / H2 `varchar`에 매핑한다 (`AnomalyEvent.rawSensorWindowJson`).
-- 실서비스에서는 `ddl-auto=update` 대신 Flyway 마이그레이션 + `NFCGUARD_DDL_AUTO=validate` 권장.
 - 기존 H2 데이터는 자동으로 옮겨지지 않는다. 필요하면 export(JSONL)로 백업 후 재수집.
 
 ### 백엔드 코드 구조
